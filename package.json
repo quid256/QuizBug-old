@@ -1,0 +1,18 @@
+{
+  "name": "quizbug",
+  "version": "1.0.0",
+  "description": "A tool to automatically flashcard Quinterest questions while reading them to you",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-css": "node-sass --include-path scss scss/quizbug.scss css/quizbug.css",
+    "watch-css": "nodemon -e scss -x \"npm run build-css\""
+  },
+  "author": "QuidNovum",
+  "license": "ISC",
+  "dependencies": { },
+  "devDependencies": {
+    "node-sass": "^3.4.1",
+    "nodemon": "^1.8.1"
+  }
+}

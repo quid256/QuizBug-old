@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<title>QuizBug</title>
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link href='https://fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+		<link href="https://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700" rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="/css/quizbug.css">
+		<script src="/js/jquery.js"></script>
+		<script src="/js/quizbug.js"></script>
+
+		<style>
+
+		</style>
+
+		<!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+	</head>
+	<body>
+		<!--[if lt IE 7]>
+			<p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+		<![endif]-->
+		<div id="questiontext">
+			<div id="qtextcont"></div>
+			<span id="msg"><em>Press [Space] to buzz</em></span>
+		</div>
+		<div id="ui">
+			<table class="buttongroup"><tbody><tr>
+				<td><button id="newquestion"><i class="fa fa-caret-square-o-right fa-lg"></i><span class="descr-inv"> NEXT</span> [N]</button></td>
+				<td><button id="select"><i class="fa fa-refresh fa-lg"></i><span class="descr-inv"> QUESTIONS</span></button></td>
+				<td><button id="annotate"><i class="fa fa-file fa-lg"></i><span class="descr-inv"> NOTECARD</span> [C]</button></td>
+				<td><button id="download"><i class="fa fa-download fa-lg"></i><span class="descr-inv"> DOWNLOAD</span></button></td>
+				<td><button id="halp"><i class="fa fa-info-circle fa-lg"></i></button></td>
+			</tr></tbody></table>
+
+			<div class="textcontainer">
+				<textarea></textarea>
+			</div>
+
+			<span class="speedlabel">Question Speed: [slow]</span>
+			<input type="range" value="50"/>
+			<span class="endspeedlabel">[fast]</span>
+		</div>
+		<div id="overlay">
+			<div>
+				<span id="changebankform">
+					<div id="emptyMsg">There are no questions that match these criteria in Quinterest!</div>
+					<table class="filterarea">
+						<tbody>
+							<tr>
+							</tr>
+						</tbody>
+					</table>
+					<table class="buttongroup"><tbody><tr>
+						<td><button id="dialog_cancel"><i class="fa fa-ban fa-lg"></i> CANCEL</button></td>
+						<td><button id="dialog_addsearch"><i class="fa fa-plus fa-lg"></i> ADD CATEGORY</button></td>
+						<td><button id="dialog_changebank">UPDATE</button></td>
+					</tr></tbody></table>
+					<table class="filter" style="display: none">
+						<tbody>
+							<tr>
+								<td>
+									<label>Search: </label>
+								</td>
+								<td>
+									<input class="questionquery"/>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label>Category: </label>
+								</td>
+								<td>
+									<select class="optionCategory">
+										<option value="All" selected>All</option>
+										<option value="Literature">Literature</option>
+										<option value="History">History</option>
+										<option value="Science">Science</option>
+										<option value="Fine Arts">Fine Arts</option>
+										<option value="Religion">Religion</option>
+										<option value="Mythology">Mythology</option>
+										<option value="Philosophy">Philosophy</option>
+										<option value="Social Science">Social Science</option>
+										<option value="Geography">Geography</option>
+										<option value="Current Events">Current Events</option>
+										<option value="Trash">Trash</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label>Subcategory: </label>
+								</td>
+								<td>
+									<select class="optionSubcategory">
+										<option value="None" selected>None</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label>Search Type: </label>
+								</td>
+								<td>
+									<select class="optionSType">
+										<option value="Answer" selected>Answer</option>
+										<option value="AnswerQuestion">Question &amp; Answer</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label>Difficulty: </label>
+								</td>
+								<td>
+									<select class="optionDifficulty">
+										<option value="All">All</option>
+										<option value="MS">Middle School</option>
+										<option value="HS" selected>High School</option>
+										<option value="College">College</option>
+										<option value="Open">Open</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<label>Tournament: </label>
+								</td>
+								<td>
+									<select class="optionTournament">
+										<option value="All" selected>All</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">
+									<button class="delete"><i class="fa fa-trash-o fa-lg"></i></button>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</span>
+				<span id="loadingform">
+					<span id="loadingtext"></span>
+					<div class="spinner">
+					  <div class="rect1"></div>
+					  <div class="rect2"></div>
+					  <div class="rect3"></div>
+					  <div class="rect4"></div>
+					  <div class="rect5"></div>
+					</div>
+				</span>
+				<span id="helpform">
+					<h1>QuizBug Help</h1>
+					<div>
+						QuizBug is a tool designed to help you study for quizbowl. It reads questions from the Quinterest database word by word and allows you to buzz in when you think you know the answer. QuizBug also has several other features to help you study including:
+						<ul>
+							<li>The ability to change which parts of the Quinterest database you want to practice by clicking the [Questions] button</li>
+							<li>The ability to create notecards from parts of the question by selecting a part of the question and either pressing [C] or clicking the [Notecard] button</li>
+							<li>The ability to download the flashcards you have created as a Tab-separated text file usable with flashcard programs like Mnemosyne by clicking the [Download] button</li>
+						</ul>
+						Questions/comments/new ideas? Contact <a href="mailto:quidnovum@gmail.com" target="_blank">quidnovum@gmail.com</a>
+					</div>
+					<table class="buttongroup"><tbody><tr><td>
+						<button id="helpform-close"><i class="fa fa-close fa-lg"></i>CLOSE</button>
+					</td></tr></tbody></table>
+				</span>
+			</div>
+		</div>
+
+		<div class="pullover">
+			<h1>QuizBug <i class="fa fa-bug fa-lg"></i></h1>
+			<span class="attribution">
+			A Quinterest Add-On<br/>
+			Created by Chris Winkler<br/>
+			v1.0.0<br/>
+			Questions/comments? Contact <a href="mailto:quidnovum@gmail.com" target="_blank">quidnovum@gmail.com</a>
+			</span>
+			<span class="pullover-bars"><i class="fa fa-bars"></i></span>
+		</div>
+
+		
+	</body>
+</html>
