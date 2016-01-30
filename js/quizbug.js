@@ -11,7 +11,6 @@ $(function() {
 			a.href = "data:text/plain;base64," + btoa(unescape(encodeURIComponent(data)));
 			a.download = fileName;
 			a.click()
-			//window.URL.revokeObjectURL(url);
 		};
 	}());
 	var questionArray = [];

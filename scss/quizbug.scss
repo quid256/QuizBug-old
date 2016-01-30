@@ -19,6 +19,8 @@ $uicolor: #000;
 $bordercolor: $quin_yellow;
 $textbgcolor: #FFF;
 $dropdowncolor: #000;
+$mainfont: 'Roboto Slab'
+$titlefont: 'Montserrat'
 
 @mixin border {
 	border: 4px solid $bordercolor;
@@ -53,7 +55,7 @@ html, body {
 #questiontext {
 	left: 2%;
 	right: 51%;
-	font-family: 'Roboto Slab', sans-serif;
+	font-family: $mainfont;
 	overflow: hidden;
 }
 
@@ -76,7 +78,7 @@ span#msg {
 	padding: 3px;
 	margin-top: 10px;
 	color: $textbgcolor;
-	font-family: "Roboto Slab"
+	font-family: $mainfont
 
 }
 
@@ -115,7 +117,6 @@ textarea {
 	white-space: pre;
 	bottom: 30px;
 	padding: 4px;
-	/* @include border-radius(4px);*/
 	border: 0px solid black;
 	@include user-select(text);
 }
@@ -174,7 +175,7 @@ div.textcontainer {
 	border: 3px solid #ff0000;
 	background-color: rgba(0, 0, 0, 0.9);
 	color: #FFFFFF;
-	font-family: "Roboto Slab";
+	font-family: $mainfont;
 	display: none;
 	width: calc(100% - 30px)
 
@@ -183,7 +184,7 @@ div.textcontainer {
 #overlay > div > #helpform {
 	color: white;
 	text-align: left;
-	font-family: "Roboto Slab";
+	font-family: $mainfont;
 }
 button:focus {
 	outline: 0;
@@ -352,7 +353,7 @@ a {
 
 .pullover > span.attribution {
 	color: $textbgcolor;
-	font-family: "Roboto Slab";
+	font-family: $mainfont;
 
 }
 
