@@ -1,6 +1,6 @@
 var http = require("http");
 var express = require("express");
-var fs = require('fs')
+var fs = require('fs');
 const PORT = 8080;
 
 var app = express();
@@ -22,7 +22,7 @@ app.get("/php/searchDatabase.php", function(req, res) {
 	}
 	while (true) {
 		try {
-			console.log("http://quinterest.org/php/searchDatabase.php?" + serialize(req.query))
+			console.log("http://quinterest.org/php/searchDatabase.php?" + serialize(req.query));
 			http.get("http://quinterest.org/php/searchDatabase.php?" + serialize(req.query), function(getres) {
 				var totData = '';
 				getres.on('data', function(chunk) {
@@ -40,7 +40,7 @@ app.get("/php/searchDatabase.php", function(req, res) {
 		}
 
 	}
-	
+
 });
 
 app.get("/php/loadSubcategories.php", function(req, res) {
@@ -71,7 +71,7 @@ app.get("/php/loadTournaments.php", function(req, res) {
 	     str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
 	  return str.join("&");
 	}
-	console.log("Get Request routed for: ", "http://quinterest.org/php/loadTournaments.php?" + serialize(req.query))
+	console.log("Get Request routed for: ", "http://quinterest.org/php/loadTournaments.php?" + serialize(req.query));
 	http.get("http://quinterest.org/php/loadTournaments.php?" + serialize(req.query), function(getres) {
 		var totData = '';
 		getres.on('data', function(chunk) {
@@ -87,4 +87,4 @@ app.get("/php/loadTournaments.php", function(req, res) {
 
 
 
-app.listen(PORT)
+app.listen(PORT);

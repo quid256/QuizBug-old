@@ -3,6 +3,8 @@ function choose(l) {
 }
 
 $(function() {
+	var isMobile = window.matchMedia.bind(window, "only screen and (max-width: 760px)");
+
 	var saveData = (function () {
 		var a = document.createElement("a");
 		document.body.appendChild(a);
@@ -156,7 +158,6 @@ $(function() {
 		};
 
 		var changeOptionCategory = function(cb, e) {
-			console.log("hi");
 			$.get("/php/loadSubcategories.php", {
 				category: $(e.target).val()
 			}, function(data) {
@@ -166,9 +167,8 @@ $(function() {
 		};
 
 		$(".filterarea .filter:last .optionCategory").change(changeOptionCategory.bind(null, function(){}));
-		
+
 		var changeOptionDifficulty = function(cb, e) {
-			console.log("HI",$(e.target).val());
 			$.get("/php/loadTournaments.php", {
 				qtype: "Tossups",
 				difficulty: $(e.target).val()
