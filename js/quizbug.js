@@ -10,7 +10,7 @@ $(function() {
 		return function (data, fileName) {
 			a.href = "data:text/plain;base64," + btoa(unescape(encodeURIComponent(data)));
 			a.download = fileName;
-			a.click()
+			a.click();
 		};
 	}());
 	var questionArray = [];
@@ -24,7 +24,7 @@ $(function() {
 
 	function updateQuestion(callback) {
 		arrSize = questionArray.length;
-		if (arrSize == 0) {
+		if (arrSize === 0) {
 			callback(arrSize);
 			currnetQuestion = null;
 		} else {
@@ -36,7 +36,7 @@ $(function() {
 	function actuateQuestion(callback, arrSize) {
 		readerState = "READING";
 		var $qspan = $("#questiontext div#qtextcont").html(currentQuestion);
-		var descrBar = $qspan.find("p:first-child").html()
+		var descrBar = $qspan.find("p:first-child").html();
 		var barArray = descrBar.replace(/<span.+?>.*?<\/span>/g, "")
 			.replace(/<.?b>/g, "").split(" | ");
 		$qspan.find("p:first-child").html("<b>" + barArray[2] + " " + barArray[1] + " | " + barArray[5] + " - " + (barArray[6] ? barArray[6] : "None") + "</b><span class='floatright'>(" + questionArray.length + " questions total)</span>");
@@ -44,7 +44,7 @@ $(function() {
 		$qspan.find("p:nth-child(2)").html(
 			$qspan.find("p:nth-child(2)").html().replace(/<em>.+?<\/em>/g, "")
 			);
-		wordsToBeRead = $("p:nth-child(2)").text().split(" ").slice(1)
+		wordsToBeRead = $("p:nth-child(2)").text().split(" ").slice(1);
 		$("p:nth-child(2)").html("");
 
 		clearInterval(readerInterval);
@@ -97,7 +97,7 @@ $(function() {
 	}
 
 	function getDatabases(startI, callback) {
-		var filterElems = $("table.filterarea > tbody > tr > td")
+		var filterElems = $("table.filterarea > tbody > tr > td");
 		if (startI >= filterElems.length) {
 			updateQuestion(callback);
 			return;
@@ -120,15 +120,16 @@ $(function() {
 	});
 	$("#annotate").click(function() {
 		var selectedTextObj = window.getSelection().getRangeAt(0);
-		var selectedText = selectedTextObj.startContainer.data
+		var selectedText = selectedTextObj.startContainer.data;
 		var startWordSel = selectedTextObj.startOffset;
 		while (selectedText.slice(startWordSel, startWordSel + 1) != " " && startWordSel > -1) {
 			startWordSel--;
-		}; startWordSel++;
+		}
+		startWordSel++;
 		var endWordSel = selectedTextObj.endOffset;
 		while (" ,.!?".indexOf(selectedText.slice(endWordSel, endWordSel + 1)) == -1 && endWordSel < selectedText.length) {
 			endWordSel++;
-		};
+		}
 
 		var modSelectedText = selectedText.slice(startWordSel, endWordSel);
 		if (window.getSelection().toString().length > 0) {
@@ -152,7 +153,7 @@ $(function() {
 			if (numLoaded == 2) {
 				cba();
 			}
-		}
+		};
 
 		var changeOptionCategory = function(cb, e) {
 			console.log("hi");
@@ -162,10 +163,10 @@ $(function() {
 				$(e.target).parents(".filter").find(".optionSubcategory").html(data.replace(/<.?select.+?>/g, ""));
 				cb();
 			});
-		}
+		};
 
 		$(".filterarea .filter:last .optionCategory").change(changeOptionCategory.bind(null, function(){}));
-
+		
 		var changeOptionDifficulty = function(cb, e) {
 			console.log("HI",$(e.target).val());
 			$.get("/php/loadTournaments.php", {
@@ -177,7 +178,7 @@ $(function() {
 				$(e.target).parents(".filter").find(".optionTournament").html(data.replace(/<.?select.+?>/g, ""));
 				cb();
 			});
-		}
+		};
 
 		$(".filterarea .filter:last-child .optionDifficulty").change(changeOptionDifficulty.bind(null, function(){}));
 
@@ -192,7 +193,7 @@ $(function() {
 				if ($("table.filterarea > tbody > tr > td").length == 1) {
 					$(".filterarea > tbody > tr > td button.delete").prop("disabled", true);
 				}
-			})
+			});
 
 			this.blur();
 
@@ -206,7 +207,7 @@ $(function() {
 
 			questionArray = [];
 			getDatabases(0, function(arrSize) {
-				if (arrSize == 0) {
+				if (arrSize === 0) {
 					$("#emptyMsg").show().delay(2 * 1000).fadeOut("slow");
 
 					$("#loadingform").hide();
@@ -236,7 +237,7 @@ $(function() {
 			if ($("table.filterarea > tbody > tr > td").length == 1) {
 				$("table.filterarea > tbody > tr > td button.delete").prop("disabled", false);
 			}
-			$("<td>").appendTo("table.filterarea > tbody > tr")
+			$("<td>").appendTo("table.filterarea > tbody > tr");
 			$("#changebankform > table.filter").clone().appendTo("table.filterarea > tbody > tr > td:last-child").fadeIn();
 
 			attachFilterListeners();
@@ -247,17 +248,17 @@ $(function() {
 		if (ev.which == 32) { // Space
 			if (readerState == "READING") {
 				clearInterval(readerInterval);
-				$("#questiontext #qtextcont p:nth-child(2)").get(0).innerHTML += "(#) "
-				$("span#msg").html("<em>Press [Space] to see the answer</em>")
+				$("#questiontext #qtextcont p:nth-child(2)").get(0).innerHTML += "(#) ";
+				$("span#msg").html("<em>Press [Space] to see the answer</em>");
 				readerState = "WAITING";
 			} else if (readerState == "WAITING") {
 				$("#questiontext #qtextcont p:nth-child(2)").get(0).innerHTML += wordsToBeRead.join(" ");
 				$("#questiontext #qtextcont p:last-child").show();
-				$("span#msg").html("<em>Press [Space] for the next question</em>")
+				$("span#msg").html("<em>Press [Space] for the next question</em>");
 				readerState = "SHOWING";
 			} else if (readerState == "SHOWING") {
 				$("#newquestion").click();
-				$("span#msg").html("<em>Press [Space] to buzz</em>")
+				$("span#msg").html("<em>Press [Space] to buzz</em>");
 				readerState = "READING";
 			}
 		} else if (ev.which == 99) { // C
@@ -318,16 +319,17 @@ $(function() {
 		});
 	});
 
-	$("<td>").appendTo("table.filterarea > tbody > tr")
+	$("<td>").appendTo("table.filterarea > tbody > tr");
 	$("#changebankform > table.filter").clone().appendTo("table.filterarea > tbody > tr > td:last-child").fadeIn();
-	$("table.filterarea > tbody > tr > td:last-child .optionCategory").val("Mythology")
+	$("table.filterarea > tbody > tr > td:last-child .optionCategory").val("Mythology");
 	$("table.filterarea > tbody > tr > td:last-child button.delete").prop("disabled", true);
+
 	attachFilterListeners(function() {
 		getDatabases(0, function() {
 			$("#overlay").fadeOut(function() {
 				$("#loadingform").hide();
 			});
-			
+
 		});
 	});
 
@@ -335,6 +337,6 @@ $(function() {
 
 	$("button").click(function() {
 		this.blur();
-	})
-	
+	});
+
 });
