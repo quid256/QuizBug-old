@@ -50,7 +50,7 @@ app.get("/php/loadSubcategories.php", function(req, res) {
 	     str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
 	  return str.join("&");
 	}
-	console.log("http://quinterest.org/php/loadSubcategories.php?" + serialize(req.query))
+	console.log("http://quinterest.org/php/loadSubcategories.php?" + serialize(req.query));
 	http.get("http://quinterest.org/php/loadSubcategories.php?" + serialize(req.query), function(getres) {
 		var totData = '';
 		getres.on('data', function(chunk) {

@@ -202,18 +202,18 @@ input {
 	outline: 0;
 }
 button {
-	display:inline;
-	padding:6px 8px;
-	margin-bottom:0;
-	font-size:14px;
-	font-weight:400;
-	line-height:1.42857143;
-	text-align:center;
-	white-space:nowrap;
-	vertical-align:middle;
+	display: inline;
+	padding: 6px 8px;
+	margin-bottom: 0;
+	font-size: 14px;
+	font-weight: 400;
+	line-height: 1.42857143;
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: middle;
 	cursor: pointer;
 	@include user-select(none);
-	background-image:none;
+	background-image: none;
 	border:1px solid transparent;
 	border-color: #fed136;
   text-transform: uppercase;
@@ -226,7 +226,7 @@ button {
 		outline: 0;
 		border-color: #f6bf01;
     color: #fff;
-    background-color: #fec503;
+    background-color: $quin_yellow;
 	}
 }
 

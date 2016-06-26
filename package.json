@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build-css": "node-sass --include-path scss scss/quizbug.scss css/quizbug.css",
-    "watch-css": "nodemon -e scss -x \"npm run build-css\""
+    "build-css": "node-sass --include-path scss --output-style compressed scss/quizbug.scss css/quizbug.css",
+    "watch-css": "nodemon -e scss -x \"npm run build-css\"",
+    "minify-js": "uglifyjs js/quizbug.js --compress --mangle -o js/quizbug.min.js"
   },
   "author": "QuidNovum",
   "license": "ISC",

@@ -2,19 +2,27 @@ function choose(l) {
 	return l[Math.floor(Math.random() * l.length)];
 }
 
-$(function() {
-	var isMobile = window.matchMedia.bind(window, "only screen and (max-width: 760px)");
+function range(l) {
+	return Array.apply(null, Array(l)).map(function (_, i) {return i;});
+}
 
-	var saveData = (function () {
-		var a = document.createElement("a");
-		document.body.appendChild(a);
-		a.style = "display: none";
-		return function (data, fileName) {
-			a.href = "data:text/plain;base64," + btoa(unescape(encodeURIComponent(data)));
-			a.download = fileName;
-			a.click();
-		};
-	}());
+// Create a data file that can be downloaded
+var saveData = (function () {
+	var a = document.createElement("a");
+	document.body.appendChild(a);
+	a.style = "display: none";
+	return function (data, fileName) {
+		a.href = "data:text/plain;base64," + btoa(unescape(encodeURIComponent(data)));
+		a.download = fileName;
+		a.click();
+	};
+}());
+
+$(function() {
+	var isMobile = window.matchMedia("only screen and (max-width: 760px)");
+
+
+
 	var questionArray = [];
 	var currentQuestion;
 	var prevSelection = null;
@@ -24,18 +32,22 @@ $(function() {
 
 	var wordSpeed = 200;
 
+	// Select question to be read and actuate it if applicable
 	function updateQuestion(callback) {
 		arrSize = questionArray.length;
 		if (arrSize === 0) {
-			callback(arrSize);
-			currnetQuestion = null;
+			currentQuestion = null;
 		} else {
 			currentQuestion = choose(questionArray);
-			actuateQuestion(callback, arrSize);
+			actuateQuestion();
+		}
+		if (callback) {
+			callback(arrSize);
 		}
 	}
 
-	function actuateQuestion(callback, arrSize) {
+	// Render a question and start the reader. After complete, call the callback.
+	function actuateQuestion() {
 		readerState = "READING";
 		var $qspan = $("#questiontext div#qtextcont").html(currentQuestion);
 		var descrBar = $qspan.find("p:first-child").html();
@@ -45,7 +57,7 @@ $(function() {
 		$qspan.find("p:last-child").hide();
 		$qspan.find("p:nth-child(2)").html(
 			$qspan.find("p:nth-child(2)").html().replace(/<em>.+?<\/em>/g, "")
-			);
+		);
 		wordsToBeRead = $("p:nth-child(2)").text().split(" ").slice(1);
 		$("p:nth-child(2)").html("");
 
@@ -53,73 +65,71 @@ $(function() {
 
 		readerInterval = setInterval(function() {
 			var nextWord = wordsToBeRead.shift();
-			if (nextWord)
+			if (nextWord) {
 				$("p:nth-child(2)").get(0).innerHTML += nextWord + " ";
-			else
+			}
+			else {
 				$.event.trigger({type: "keypress", which: 32});
+			}
 		}, wordSpeed);
+
 		readerState = "READING";
-		callback(arrSize);
 	}
 
+	// Download the entire database associated with the given form data. After finished, callback.
 	function downloadNewDatabase(formdata, callback) {
-		$.ajax({
-			url: "/php/searchDatabase.php",
-			data: {
-				limit: "yes",
-				info: formdata.questionQuery,
-				categ: formdata.optionCategory,
-				sub: formdata.optionSubcategory,
-				stype: formdata.optionSType,
-				qtype: "Tossups",
-				difficulty: formdata.optionDifficulty,
-				tournamentyear: formdata.optionTournament
-			},
-			success: function(data) {
-				questionArray = questionArray.concat(data.replace(/\s+/g, " ").split("<hr>").slice(1, -2));
-				$.ajax({
-					url: "/php/searchDatabase.php",
-					data: {
-						limit: "no",
-						info: formdata.questionQuery,
-						categ: formdata.optionCategory,
-						sub: formdata.optionSubcategory,
-						stype: formdata.optionSType,
-						qtype: "Tossups",
-						difficulty: formdata.optionDifficulty,
-						tournamentyear: formdata.optionTournament
-					},
-					success: function(data) {
-						questionArray = questionArray.concat(data.replace(/\s+/g, " ").split("<hr>").slice(0, -1));
-						callback();
-					}
-				});
-			}
+		async.each(["yes", "no"], function(isLimit, asyncCB) {
+			$.ajax({
+				url: "/php/searchDatabase.php",
+				data: {
+					limit: "yes",
+					info: formdata.questionQuery,
+					categ: formdata.optionCategory,
+					sub: formdata.optionSubcategory,
+					stype: formdata.optionSType,
+					qtype: "Tossups",
+					difficulty: formdata.optionDifficulty,
+					tournamentyear: formdata.optionTournament
+				},
+				success: function(data) {
+					var sliceI = (isLimit == "yes") ? [1, -2] : [0, -1];
+					questionArray = questionArray.concat(data.replace(/\s+/g, " ").split("<hr>").slice(sliceI[0], sliceI[1]));
+					asyncCB();
+				}
+			});
+		}, function(err) {
+			callback();
 		});
 	}
 
+	// Download the aggregate database containing all entries from all filters
 	function getDatabases(startI, callback) {
+
 		var filterElems = $("table.filterarea > tbody > tr > td");
-		if (startI >= filterElems.length) {
+		async.each(range(filterElems.length), function(i, asyncCB) {
+			// For each index corresponding to a filter...
+			var curNode = filterElems.get(i);
+			downloadNewDatabase({
+				questionQuery: 		$(curNode).find("> table.filter .questionquery").val(),
+				optionCategory: 	$(curNode).find("> table.filter .optionCategory").val(),
+				optionSubcategory: 	$(curNode).find("> table.filter .optionSubcategory").val(),
+				optionSType: 		$(curNode).find("> table.filter .optionSType").val(),
+				optionDifficulty: 	$(curNode).find("> table.filter .optionDifficulty").val(),
+				optionTournament:   $(curNode).find("> table.filter .optionTournament").val()
+			}, asyncCB);
+
+		}, function(err) {
 			updateQuestion(callback);
-			return;
-		}
-		var curNode = filterElems.get(startI);
-		downloadNewDatabase({
-			questionQuery: 		$(curNode).find("> table.filter .questionquery").val(),
-			optionCategory: 	$(curNode).find("> table.filter .optionCategory").val(),
-			optionSubcategory: 	$(curNode).find("> table.filter .optionSubcategory").val(),
-			optionSType: 		$(curNode).find("> table.filter .optionSType").val(),
-			optionDifficulty: 	$(curNode).find("> table.filter .optionDifficulty").val(),
-			optionTournament:   $(curNode).find("> table.filter .optionTournament").val()
-		}, getDatabases.bind(null, startI + 1, callback));
+		});
+
 	}
 
 
 	$("#newquestion").click(function() {
-		updateQuestion(function() {});
+		updateQuestion();
 		readerState = "READING";
 	});
+
 	$("#annotate").click(function() {
 		var selectedTextObj = window.getSelection().getRangeAt(0);
 		var selectedText = selectedTextObj.startContainer.data;
@@ -147,15 +157,8 @@ $(function() {
 	});
 
 	function attachFilterListeners(cba) {
-		var numLoaded = 0;
-		cba = cba || function() {};
 
-		var ldCounter = function() {
-			numLoaded++;
-			if (numLoaded == 2) {
-				cba();
-			}
-		};
+		cba = cba || function() {};
 
 		var changeOptionCategory = function(cb, e) {
 			$.get("/php/loadSubcategories.php", {
@@ -182,8 +185,15 @@ $(function() {
 
 		$(".filterarea .filter:last-child .optionDifficulty").change(changeOptionDifficulty.bind(null, function(){}));
 
-		changeOptionDifficulty(ldCounter, { target: $(".filterarea .filter:last .optionDifficulty")[0] });
-		changeOptionCategory(ldCounter, { target: $(".filterarea .filter:last .optionCategory")[0] });
+		async.parallel([
+			function(cb) {
+				changeOptionDifficulty(cb, { target: $(".filterarea .filter:last .optionDifficulty")[0] });
+			}, function(cb) {
+				changeOptionCategory(cb, { target: $(".filterarea .filter:last .optionCategory")[0] });
+			}
+		], cba);
+
+
 
 		$(".filterarea .filter:last .delete").click(function(e) {
 			var $sender = $(e.target);
