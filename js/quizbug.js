@@ -19,9 +19,8 @@ var saveData = (function () {
 }());
 
 $(function() {
+	var mobileLayout = false;
 	var isMobile = window.matchMedia("only screen and (max-width: 760px)");
-
-
 
 	var questionArray = [];
 	var currentQuestion;
@@ -210,6 +209,7 @@ $(function() {
 		});
 
 	}
+
 	$("#dialog_changebank").click(function() {
 		if ($("table.filterarea > tbody > tr > td").length > 0) {
 			$("#changebankform").hide();
@@ -240,7 +240,6 @@ $(function() {
 		});
 
 	});
-
 	$("#dialog_addsearch").click(function() {
 
 		if ($("table.filterarea > tbody > tr > td").length < 5) {
@@ -322,7 +321,6 @@ $(function() {
 		$("#helpform").show();
 		$("#overlay").fadeIn();
 	});
-
 	$("button#helpform-close").click(function() {
 		$("#overlay").fadeOut(function() {
 			$("#helpform").hide();
@@ -348,5 +346,22 @@ $(function() {
 	$("button").click(function() {
 		this.blur();
 	});
+
+	function handleLayoutChange() {
+		if (isMobile.matches) {
+			if (!mobileLayout) {
+				mobileLayout = true;
+
+			}
+		} else {
+			if (mobileLayout) {
+				mobileLayout = false;
+				
+			}
+		}
+	}
+
+	$(window).resize(handleLayoutChange);
+	handleLayoutChange();
 
 });

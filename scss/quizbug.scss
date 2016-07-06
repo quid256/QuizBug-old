@@ -129,60 +129,140 @@ div.textcontainer {
 	margin-top: 10px;
 	height: calc(100% - 60px);
 }
-#overlay {
-	display: none;
-	position: absolute;
-	left: 0px;
-	top: 0px;
-	width:100%;
-	height:100%;
-	text-align: center;
-	z-index: 1000;
-	background-color: rgba(0, 0, 0, 0.4);
 
-	> div {
-		background-color: #000;
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		@include border;
-		padding:15px;
-		text-align:center;
-		border-radius: 4px;
-		box-shadow: 9px 6px 29px 5px rgba(0,0,0,0.75);
+/* Begin modal styles */
 
-		table.filterarea {
+
+.modalContainer {
+	background-color: #000;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	@include border;
+	padding:15px;
+	text-align:center;
+	border-radius: 4px;
+	box-shadow: 9px 6px 29px 5px rgba(0,0,0,0.75);
+
+  // width: calc(37% - (0.3em + 1em) * 2);
+  // min-width: 300px;
+  // height: calc(50% - (0.3em + 1em) * 2);
+  // min-height: 300px;
+
+	&.modal-anim-enter {
+	  opacity: 0.00;
+	  transform: translate(-50%, -50%) scale(0.8);
+	  transition: all 0.3s;
+	}
+	&.modal-anim-enter-active {
+	  transform: translate(-50%, -50%) scale(1.0);
+	  opacity: 1;
+	}
+	&.modal-anim-leave {
+	  opacity: 1;
+	  transform: translate(-50%, -50%) scale(1.0);
+	  transition: all 0.3s;
+	}
+	&.modal-anim-leave-active {
+	  opacity: 0.0;
+	  transform: translate(-50%, -50%) scale(0.8);
+	}
+
+	table.filterarea {
+		margin: 0px auto;
+
+		.question-filter-cell {
+			&.filter-anim-enter {
+				opacity: 0;
+				transform: scale(0.0);
+				transition: all 0.3s;
+				button.delete {
+					opacity: 0;
+					transform: scale(0.5, 0.5);
+				}
+			}
+			&.filter-anim-enter-active {
+				opacity: 1;
+				transform: scale(1.0);
+				button.delete {
+					opacity: 1;
+					transform: none;
+				}
+			}
+			&.filter-anim-leave {
+				opacity: 1;
+				transform: scale(1.0);
+				transition: all 0.3s;
+				button.delete {
+					opacity: 1;
+					transform: none;
+				}
+			}
+			&.filter-anim-leave-active {
+				opacity: 0;
+				transform: scale(0.0);
+				button.delete {
+					opacity: 0;
+					transform: scale(0.5, 0.5);
+				}
+			}
+		}
+
+		table.filter {
+			text-align: left;
 			margin: 0px auto;
 
-			table.filter {
-				text-align: left;
-				margin: 0px auto;
+			td:nth-child(1) {
+				text-align: right;
+				font-family: "Roboto Slab";
+				color: white;
+			}
 
-				td:nth-child(1) {
-					text-align: right;
-					font-family: "Roboto Slab";
-					color: white;
-				}
+			tr:last-child td {
+				text-align: center;
+			}
 
-				tr:last-child td {
-					text-align: center;
-				}
-
+			input, select {
+				width: 150px;
 			}
 
 		}
 
-		select {
-			width: 100%;
-		}
+	}
 
-		> #helpform {
-			color: white;
-			text-align: left;
-			font-family: $mainfont;
-		}
+	select {
+		width: 100%;
+	}
 
+	> #helpform {
+		color: white;
+		text-align: left;
+		font-family: $mainfont;
+	}
+}
+
+.modalBlurFilter {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgb(0, 0, 0);
+  opacity: 0.5;
+	&.modal-anim-enter {
+		opacity: 0.00;
+		transition: all 0.3s;
+	}
+	&.modal-anim-enter-active {
+		opacity: 0.5;
+	}
+	&.modal-anim-leave {
+	  opacity: 0.5;
+	  transition: all 0.3s;
+	}
+	&.modal-anim-leave-active {
+	  opacity: 0.0;
 	}
 }
 
@@ -228,10 +308,19 @@ button {
     color: #fff;
     background-color: $quin_yellow;
 	}
-}
 
-button.delete:disabled {
-	visibility: hidden;
+	&.delete {
+		transform: none;
+		opacity: 1.0;
+		transition: all 0.3s;
+
+		&.single {
+			transform: scale(0.5, 0.5);
+			opacity: 0.0;
+			cursor: default;
+		}
+	}
+
 }
 
 table.buttongroup {
@@ -367,9 +456,13 @@ h1 {
 }
 
 a {
-	color: $quin_yellow
+	color: $quin_yellow;
 }
 
+.help-modal-text {
+	color: $textbgcolor;
+	text-align: left;
+}
 
 .pullover-bars {
 	position: absolute;

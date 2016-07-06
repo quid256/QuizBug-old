@@ -1,16 +1,16 @@
 var http = require("http");
 var express = require("express");
 var fs = require('fs');
-const PORT = 8080;
+var PORT = 8080;
 
 var app = express();
 
 app.use("/css", express.static("css"));
-app.use("/js", express.static("js"));
+app.use("/dist", express.static("bundle"));
 
 app.get("/", function(req, res) {
 	res.writeHead(200, {'Content-Type': 'text/html'});
-	res.end(fs.readFileSync('quizbug.html'));
+	res.end(fs.readFileSync('quizbug-react.html'));
 });
 
 app.get("/php/searchDatabase.php", function(req, res) {
