@@ -434,12 +434,12 @@ var ChangeBankModal = function (_React$Component4) {
     key: "closeModal",
     value: function closeModal() {
       this.setState({ questionFilters: this.state.formerFilters });
-      this.props.onFinished(this.state.questionFilters);
+      this.props.onFinished(this.state.questionFilters, false);
     }
   }, {
     key: "updateFilters",
     value: function updateFilters() {
-      this.props.onFinished(this.state.questionFilters);
+      this.props.onFinished(this.state.questionFilters, true);
     }
 
     // When it is being rendered to DOM...
@@ -764,16 +764,16 @@ var HelpModal = _require.HelpModal;
 
 
 function choose(l) {
-  return l[Math.floor(Math.random() * l.length)];
+	return l[Math.floor(Math.random() * l.length)];
 }
 
 function range(l) {
-  return Array.apply(null, Array(l)).map(function (_, i) {
-    return i;
-  });
+	return Array.apply(null, Array(l)).map(function (_, i) {
+		return i;
+	});
 }
 
-// Create a data file that can be downloaded
+// // Create a data file that can be downloaded
 // var saveData = (function () {
 // 	var a = document.createElement("a");
 // 	document.body.appendChild(a);
@@ -786,269 +786,414 @@ function range(l) {
 // }());
 
 var QuestionContainer = function (_React$Component) {
-  _inherits(QuestionContainer, _React$Component);
+	_inherits(QuestionContainer, _React$Component);
 
-  function QuestionContainer() {
-    _classCallCheck(this, QuestionContainer);
+	function QuestionContainer() {
+		_classCallCheck(this, QuestionContainer);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(QuestionContainer).apply(this, arguments));
-  }
+		return _possibleConstructorReturn(this, Object.getPrototypeOf(QuestionContainer).apply(this, arguments));
+	}
 
-  _createClass(QuestionContainer, [{
-    key: 'render',
-    value: function render() {
-      return React.createElement(
-        'div',
-        { id: 'questiontext', __self: this
-        },
-        React.createElement('div', { id: 'qtextcont', __self: this
-        }),
-        React.createElement(
-          'span',
-          { id: 'msg', __self: this
-          },
-          React.createElement(
-            'em',
-            {
-              __self: this
-            },
-            'Press [Space] to buzz'
-          )
-        )
-      );
-    }
-  }]);
+	_createClass(QuestionContainer, [{
+		key: 'render',
+		value: function render() {
+			return React.createElement(
+				'div',
+				{ id: 'questiontext', __self: this
+				},
+				React.createElement(
+					'div',
+					{ id: 'qtextcont', __self: this
+					},
+					(this.props.questionData.textList[0] || { question: "" }).question
+				),
+				React.createElement(
+					'span',
+					{ id: 'msg', __self: this
+					},
+					React.createElement(
+						'em',
+						{
+							__self: this
+						},
+						'Press [Space] to buzz'
+					)
+				)
+			);
+		}
+	}]);
 
-  return QuestionContainer;
+	return QuestionContainer;
 }(React.Component);
 
 var UIContainer = function (_React$Component2) {
-  _inherits(UIContainer, _React$Component2);
+	_inherits(UIContainer, _React$Component2);
 
-  function UIContainer() {
-    _classCallCheck(this, UIContainer);
+	function UIContainer() {
+		_classCallCheck(this, UIContainer);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(UIContainer).apply(this, arguments));
-  }
+		return _possibleConstructorReturn(this, Object.getPrototypeOf(UIContainer).apply(this, arguments));
+	}
 
-  _createClass(UIContainer, [{
-    key: 'render',
-    value: function render() {
-      return React.createElement(
-        'div',
-        { id: 'ui', __self: this
-        },
-        React.createElement(
-          'table',
-          { className: 'buttongroup', __self: this
-          },
-          React.createElement(
-            'tbody',
-            {
-              __self: this
-            },
-            React.createElement(
-              'tr',
-              {
-                __self: this
-              },
-              React.createElement(
-                'td',
-                {
-                  __self: this
-                },
-                React.createElement(
-                  'button',
-                  { onClick: this.props.buttons.next, __self: this
-                  },
-                  React.createElement('i', { className: 'fa fa-caret-square-o-right fa-lg', __self: this
-                  }),
-                  React.createElement(
-                    'span',
-                    { className: 'descr-inv', __self: this
-                    },
-                    ' NEXT'
-                  ),
-                  ' [N]'
-                )
-              ),
-              React.createElement(
-                'td',
-                {
-                  __self: this
-                },
-                React.createElement(
-                  'button',
-                  { onClick: this.props.buttons.questions, __self: this
-                  },
-                  React.createElement('i', { className: 'fa fa-refresh fa-lg', __self: this
-                  }),
-                  React.createElement(
-                    'span',
-                    { className: 'descr-inv', __self: this
-                    },
-                    ' QUESTIONS'
-                  )
-                )
-              ),
-              React.createElement(
-                'td',
-                {
-                  __self: this
-                },
-                React.createElement(
-                  'button',
-                  { onClick: this.props.buttons.card, __self: this
-                  },
-                  React.createElement('i', { className: 'fa fa-file fa-lg', __self: this
-                  }),
-                  React.createElement(
-                    'span',
-                    { className: 'descr-inv', __self: this
-                    },
-                    ' NOTECARD'
-                  ),
-                  ' [C]'
-                )
-              ),
-              React.createElement(
-                'td',
-                {
-                  __self: this
-                },
-                React.createElement(
-                  'button',
-                  { onClick: this.props.buttons.download, __self: this
-                  },
-                  React.createElement('i', { className: 'fa fa-download fa-lg', __self: this
-                  }),
-                  React.createElement(
-                    'span',
-                    { className: 'descr-inv', __self: this
-                    },
-                    ' DOWNLOAD'
-                  )
-                )
-              ),
-              React.createElement(
-                'td',
-                {
-                  __self: this
-                },
-                React.createElement(
-                  'button',
-                  { onClick: this.props.buttons.help, __self: this
-                  },
-                  React.createElement('i', { className: 'fa fa-info-circle fa-lg', __self: this
-                  })
-                )
-              )
-            )
-          )
-        ),
-        React.createElement(
-          'div',
-          { className: 'textcontainer', __self: this
-          },
-          React.createElement('textarea', {
-            __self: this
-          })
-        ),
-        React.createElement(
-          'span',
-          { className: 'speedlabel', __self: this
-          },
-          'Question Speed: [slow]'
-        ),
-        React.createElement('input', { type: 'range', defaultValue: '50', __self: this
-        }),
-        React.createElement(
-          'span',
-          { className: 'endspeedlabel', __self: this
-          },
-          '[fast]'
-        )
-      );
-    }
-  }]);
+	_createClass(UIContainer, [{
+		key: 'render',
+		value: function render() {
+			return React.createElement(
+				'div',
+				{ id: 'ui', __self: this
+				},
+				React.createElement(
+					'table',
+					{ className: 'buttongroup', __self: this
+					},
+					React.createElement(
+						'tbody',
+						{
+							__self: this
+						},
+						React.createElement(
+							'tr',
+							{
+								__self: this
+							},
+							React.createElement(
+								'td',
+								{
+									__self: this
+								},
+								React.createElement(
+									'button',
+									{ onClick: this.props.buttons.next, __self: this
+									},
+									React.createElement('i', { className: 'fa fa-caret-square-o-right fa-lg', __self: this
+									}),
+									React.createElement(
+										'span',
+										{ className: 'descr-inv', __self: this
+										},
+										' NEXT'
+									),
+									' [N]'
+								)
+							),
+							React.createElement(
+								'td',
+								{
+									__self: this
+								},
+								React.createElement(
+									'button',
+									{ onClick: this.props.buttons.questions, __self: this
+									},
+									React.createElement('i', { className: 'fa fa-refresh fa-lg', __self: this
+									}),
+									React.createElement(
+										'span',
+										{ className: 'descr-inv', __self: this
+										},
+										' QUESTIONS'
+									)
+								)
+							),
+							React.createElement(
+								'td',
+								{
+									__self: this
+								},
+								React.createElement(
+									'button',
+									{ onClick: this.props.buttons.card, __self: this
+									},
+									React.createElement('i', { className: 'fa fa-file fa-lg', __self: this
+									}),
+									React.createElement(
+										'span',
+										{ className: 'descr-inv', __self: this
+										},
+										' NOTECARD'
+									),
+									' [C]'
+								)
+							),
+							React.createElement(
+								'td',
+								{
+									__self: this
+								},
+								React.createElement(
+									'button',
+									{ onClick: this.props.buttons.download, __self: this
+									},
+									React.createElement('i', { className: 'fa fa-download fa-lg', __self: this
+									}),
+									React.createElement(
+										'span',
+										{ className: 'descr-inv', __self: this
+										},
+										' DOWNLOAD'
+									)
+								)
+							),
+							React.createElement(
+								'td',
+								{
+									__self: this
+								},
+								React.createElement(
+									'button',
+									{ onClick: this.props.buttons.help, __self: this
+									},
+									React.createElement('i', { className: 'fa fa-info-circle fa-lg', __self: this
+									})
+								)
+							)
+						)
+					)
+				),
+				React.createElement(
+					'div',
+					{ className: 'textcontainer', __self: this
+					},
+					React.createElement('textarea', {
+						__self: this
+					})
+				),
+				React.createElement(
+					'span',
+					{ className: 'speedlabel', __self: this
+					},
+					'Question Speed: [slow]'
+				),
+				React.createElement('input', { type: 'range', defaultValue: '50', __self: this
+				}),
+				React.createElement(
+					'span',
+					{ className: 'endspeedlabel', __self: this
+					},
+					'[fast]'
+				)
+			);
+		}
+	}]);
 
-  return UIContainer;
+	return UIContainer;
 }(React.Component);
 
 var App = function (_React$Component3) {
-  _inherits(App, _React$Component3);
+	_inherits(App, _React$Component3);
 
-  function App(props) {
-    _classCallCheck(this, App);
+	function App(props) {
+		_classCallCheck(this, App);
 
-    var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(App).call(this, props));
+		var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(App).call(this, props));
 
-    _this3.state = {
-      "isMobile": false,
-      "visibleModal": "none"
-    };
-    return _this3;
-  }
+		_this3.state = {
+			"isMobile": false,
+			"visibleModal": "none",
+			"readingState": "READING",
+			"questions": {
+				textList: [],
+				indList: [],
+				curInd: -1
+			}
+		};
+		return _this3;
+	}
 
-  _createClass(App, [{
-    key: 'openBankModal',
-    value: function openBankModal() {
-      this.setState({ "visibleModal": "changeBank" });
-    }
-  }, {
-    key: 'openLoadingModal',
-    value: function openLoadingModal() {
-      this.setState({ "visibleModal": "changeBank" });
-    }
-  }, {
-    key: 'openHelpModal',
-    value: function openHelpModal() {
-      this.setState({ "visibleModal": "help" });
-    }
-  }, {
-    key: 'closeModal',
-    value: function closeModal() {
-      this.setState({ "visibleModal": "none" });
-    }
-  }, {
-    key: 'render',
-    value: function render() {
+	_createClass(App, [{
+		key: 'openBankModal',
+		value: function openBankModal() {
+			this.setState({ "visibleModal": "changeBank" });
+		}
+	}, {
+		key: 'openLoadingModal',
+		value: function openLoadingModal() {
+			this.setState({ "visibleModal": "loading" });
+		}
+	}, {
+		key: 'openHelpModal',
+		value: function openHelpModal() {
+			this.setState({ "visibleModal": "help" });
+		}
+	}, {
+		key: 'closeModal',
+		value: function closeModal() {
+			this.setState({ "visibleModal": "none" });
+		}
+	}, {
+		key: 'onBankChanged',
+		value: function onBankChanged(newFilters, updated) {
+			if (updated) {
+				this.openLoadingModal();
+				this.retrieveQuestionSet(newFilters, function () {
+					this.closeModal();
+				}.bind(this));
+			} else {
+				closeModal();
+			}
+		}
+	}, {
+		key: 'chooseQuestion',
+		value: function chooseQuestion() {}
+	}, {
+		key: 'retrieveDatabase',
+		value: function retrieveDatabase(formdata, callback) {
+			var questionArray = [];
+			async.each(["yes", "no"], function (isLimit, asyncCB) {
+				$.ajax({
+					url: "/php/searchDatabase.php",
+					data: {
+						limit: isLimit,
+						info: formdata.search,
+						categ: formdata.category,
+						sub: formdata.subCategory,
+						stype: formdata.searchType,
+						qtype: "Tossups",
+						difficulty: formdata.difficulty,
+						tournamentyear: formdata.tournament
+					},
+					success: function success(data) {
+						var sliceI = isLimit == "yes" ? [1, -2] : [0, -1];
+						var qArray = data.replace(/\s+/g, " ").split("<hr>").slice(sliceI[0], sliceI[1]).map(function (s) {
+							var parts = s.match(/<p>.+?<\/p>/g);
+							return {
+								meta: parts[0].replace(/<.+?>/g, "").split(" | "),
+								question: parts[1].replace(/<.+?>/g, "").replace(/^Question: /, ""),
+								answer: parts[2].replace(/<.+?>/g, "").replace(/^Answer: /, "")
+							};
+						});
+						questionArray = questionArray.concat(qArray);
+						console.log("retrieved");
+						asyncCB();
+					}
+				});
+			}, function (err) {
+				if (err) throw err;
+				console.log("calling back");
+				callback(questionArray);
+			});
+		}
+	}, {
+		key: 'retrieveQuestionSet',
+		value: function retrieveQuestionSet(questionFilters, callback) {
+			var fullQuestionArray = [];
+			console.log("hi1");
+			// TODO: add some sort of system to remove duplicates from question bank
+			async.each(questionFilters, function (questionFilter, asyncCB) {
 
-      return React.createElement(
-        'div',
-        {
-          __self: this
-        },
-        React.createElement(QuestionContainer, {
-          __self: this
-        }),
-        React.createElement(UIContainer, { buttons: {
-            "next": function () {}.bind(this),
-            "questions": this.openBankModal.bind(this),
-            "card": function () {}.bind(this),
-            "download": function () {}.bind(this),
-            "help": this.openHelpModal.bind(this)
-          }, __self: this
-        }),
-        React.createElement(ChangeBankModal, { isOpen: this.state.visibleModal == "changeBank",
-          onFinished: this.closeModal.bind(this), __self: this
-        }),
-        React.createElement(LoadingModal, { isOpen: this.state.visibleModal == "loading", __self: this
-        }),
-        React.createElement(HelpModal, { isOpen: this.state.visibleModal == "help",
-          onClosing: this.closeModal.bind(this), __self: this
-        })
-      );
-    }
-  }]);
+				this.retrieveDatabase(questionFilter, function (qArray) {
+					console.log("hi2");
+					fullQuestionArray = fullQuestionArray.concat(qArray);
+					asyncCB();
+				});
+			}.bind(this), function (err) {
+				if (err) throw err;
+				console.log("start");
 
-  return App;
+				var indList = range(fullQuestionArray.length);
+
+				this.setState({
+					questions: {
+						textList: fullQuestionArray,
+						indList: indList,
+						curInd: choose(indList)
+					},
+					readerState: "READING"
+				});
+
+				console.log("hey");
+
+				callback();
+			}.bind(this));
+		}
+	}, {
+		key: 'render',
+		value: function render() {
+
+			return React.createElement(
+				'div',
+				{
+					__self: this
+				},
+				React.createElement(
+					'div',
+					{ className: 'appContent', __self: this
+					},
+					React.createElement(QuestionContainer, { questionData: this.state.questions, readerState: this.state.readerState, __self: this
+					}),
+					React.createElement(UIContainer, { buttons: {
+							"next": function () {}.bind(this),
+							"questions": this.openBankModal.bind(this),
+							"card": function () {}.bind(this),
+							"download": function () {}.bind(this),
+							"help": this.openHelpModal.bind(this)
+						}, __self: this
+					}),
+					React.createElement(
+						'div',
+						{ className: 'pullover', __self: this
+						},
+						React.createElement(
+							'h1',
+							{
+								__self: this
+							},
+							'QuizBug ',
+							React.createElement('i', { className: 'fa fa-bug fa-lg', __self: this
+							})
+						),
+						React.createElement(
+							'span',
+							{ className: 'attribution', __self: this
+							},
+							'A Quinterest Add-On',
+							React.createElement('br', {
+								__self: this
+							}),
+							'Created by Chris Winkler',
+							React.createElement('br', {
+								__self: this
+							}),
+							'v1.1.0',
+							React.createElement('br', {
+								__self: this
+							}),
+							'Questions/comments? Contact ',
+							React.createElement(
+								'a',
+								{ href: 'mailto:quidnovum@gmail.com', target: '_blank', __self: this
+								},
+								'quidnovum@gmail.com'
+							)
+						),
+						React.createElement(
+							'span',
+							{ className: 'pullover-bars', __self: this
+							},
+							React.createElement('i', { className: 'fa fa-bars', __self: this
+							})
+						)
+					)
+				),
+				React.createElement(ChangeBankModal, { isOpen: this.state.visibleModal == "changeBank",
+					onFinished: this.onBankChanged.bind(this), __self: this
+				}),
+				React.createElement(LoadingModal, { isOpen: this.state.visibleModal == "loading", __self: this
+				}),
+				React.createElement(HelpModal, { isOpen: this.state.visibleModal == "help",
+					onClosing: this.closeModal.bind(this), __self: this
+				})
+			);
+		}
+	}]);
+
+	return App;
 }(React.Component);
 
 addEventListener("load", function () {
-  ReactDOM.render(React.createElement(App, {
-    __self: undefined
-  }), document.getElementById("appContainer"));
+	ReactDOM.render(React.createElement(App, {
+		__self: undefined
+	}), document.getElementById("appContainer"));
 });
 
 // $(function() {

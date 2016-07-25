@@ -48,6 +48,15 @@ html, body {
 	overflow: hidden;
 }
 
+.appContent {
+  transition: 0.3s filter linear;
+  -webkit-transition: 0.3s -webkit-filter linear;
+  -moz-transition: 0.3s -moz-filter linear;
+  -ms-transition: 0.3s -ms-filter linear;
+  -o-transition: 0.3s -o-filter linear;
+}
+
+
 .floatright {
 	float: right;
 }
@@ -369,6 +378,10 @@ table.buttongroup {
 
 	  -webkit-animation: sk-stretchdelay 1.2s infinite ease-in-out;
 	  animation: sk-stretchdelay 1.2s infinite ease-in-out;
+	}
+
+	.rect1, .rect2, .rect3, .rect4 {
+		margin-right: 3px;
 	}
 
 	.rect2 {

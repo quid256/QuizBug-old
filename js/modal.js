@@ -253,11 +253,11 @@ class ChangeBankModal extends React.Component {
 
   closeModal() {
     this.setState({questionFilters: this.state.formerFilters});
-    this.props.onFinished(this.state.questionFilters);
+    this.props.onFinished(this.state.questionFilters, false);
   }
 
   updateFilters() {
-    this.props.onFinished(this.state.questionFilters);
+    this.props.onFinished(this.state.questionFilters, true);
   }
 
   // When it is being rendered to DOM...

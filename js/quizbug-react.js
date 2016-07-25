@@ -11,7 +11,7 @@ function range(l) {
 	return Array.apply(null, Array(l)).map(function (_, i) {return i;});
 }
 
-// Create a data file that can be downloaded
+// // Create a data file that can be downloaded
 // var saveData = (function () {
 // 	var a = document.createElement("a");
 // 	document.body.appendChild(a);
@@ -27,7 +27,9 @@ class QuestionContainer extends React.Component {
   render() {
     return (
       <div id="questiontext">
-  			<div id="qtextcont"></div>
+  			<div id="qtextcont">{
+					(this.props.questionData.textList[0] || {question: ""}).question
+				}</div>
   			<span id="msg"><em>Press [Space] to buzz</em></span>
   		</div>
     );
@@ -65,45 +67,140 @@ class App extends React.Component {
     super(props);
     this.state = {
       "isMobile": false,
-      "visibleModal": "none"
+      "visibleModal": "none",
+			"readingState": "READING",
+			"questions": {
+				textList: [],
+				indList: [],
+				curInd: -1
+			}
     };
   }
 
-  openBankModal() {
-    this.setState({"visibleModal": "changeBank"});
-  }
+  openBankModal() { this.setState({"visibleModal": "changeBank"}); }
+  openLoadingModal() { this.setState({"visibleModal": "loading"}); }
+  openHelpModal() { this.setState({"visibleModal": "help"}); }
 
-  openLoadingModal() {
-    this.setState({"visibleModal": "changeBank"});
-  }
+  closeModal() { this.setState({"visibleModal": "none"}); }
 
-  openHelpModal() {
-    this.setState({"visibleModal": "help"});
-  }
+	onBankChanged(newFilters, updated) {
+		if (updated) {
+			this.openLoadingModal();
+			this.retrieveQuestionSet(newFilters, function() {
+				this.closeModal();
+			}.bind(this));
+		} else {
+			closeModal();
+		}
+	}
 
-  closeModal() {
-    this.setState({"visibleModal": "none"});
-  }
+	chooseQuestion() {
+
+	}
+
+	retrieveDatabase(formdata, callback) {
+		var questionArray = [];
+		async.each(["yes", "no"], function(isLimit, asyncCB) {
+			$.ajax({
+				url: "/php/searchDatabase.php",
+				data: {
+					limit: isLimit,
+					info: formdata.search,
+					categ: formdata.category,
+					sub: formdata.subCategory,
+					stype: formdata.searchType,
+					qtype: "Tossups",
+					difficulty: formdata.difficulty,
+					tournamentyear: formdata.tournament
+				},
+				success: function(data) {
+					var sliceI = (isLimit == "yes") ? [1, -2] : [0, -1];
+					var qArray = data.replace(/\s+/g, " ").split("<hr>").slice(sliceI[0], sliceI[1]).map(function(s) {
+						var parts = s.match(/<p>.+?<\/p>/g);
+						return {
+							meta: parts[0].replace(/<.+?>/g, "").split(" | "),
+							question: parts[1].replace(/<.+?>/g, "").replace(/^Question: /, ""),
+							answer: parts[2].replace(/<.+?>/g, "").replace(/^Answer: /, "")
+						};
+					});
+					questionArray = questionArray.concat(qArray);
+					console.log("retrieved");
+					asyncCB();
+				}
+			});
+		}, function(err) {
+			if (err) throw err;
+			console.log("calling back");
+			callback(questionArray);
+		});
+	}
+
+	retrieveQuestionSet(questionFilters, callback) {
+		var fullQuestionArray = [];
+		console.log("hi1");
+		// TODO: add some sort of system to remove duplicates from question bank
+		async.each(questionFilters, function(questionFilter, asyncCB) {
+
+			this.retrieveDatabase(questionFilter, function(qArray) {
+				console.log("hi2");
+				fullQuestionArray = fullQuestionArray.concat(qArray);
+				asyncCB();
+			});
+		}.bind(this), function(err) {
+			if (err) throw err;
+			console.log("start");
+
+			var indList = range(fullQuestionArray.length);
+
+			this.setState({
+				questions: {
+					textList: fullQuestionArray,
+					indList: indList,
+					curInd: choose(indList)
+				},
+				readerState: "READING"
+			});
+
+			console.log("hey");
+
+			callback();
+		}.bind(this));
+	}
 
   render() {
 
     return (
       <div>
-        <QuestionContainer />
-        <UIContainer buttons={
-          {
-            "next": function() {}.bind(this),
-            "questions": this.openBankModal.bind(this),
-            "card": function() {}.bind(this),
-            "download": function() {}.bind(this),
-            "help": this.openHelpModal.bind(this)
-          }
-        }/>
-        <ChangeBankModal isOpen={ this.state.visibleModal == "changeBank" }
-          onFinished={this.closeModal.bind(this)} />
+				<div className="appContent">
+	        <QuestionContainer questionData={this.state.questions} readerState={this.state.readerState}/>
+	        <UIContainer buttons={
+	          {
+	            "next": function() {}.bind(this),
+	            "questions": this.openBankModal.bind(this),
+	            "card": function() {}.bind(this),
+	            "download": function() {}.bind(this),
+	            "help": this.openHelpModal.bind(this)
+	          }
+	        }/>
+					<div className="pullover">
+						<h1>QuizBug <i className="fa fa-bug fa-lg"></i></h1>
+						<span className="attribution">
+						A Quinterest Add-On<br/>
+						Created by Chris Winkler<br/>
+						v1.1.0<br/>
+						Questions/comments? Contact <a href="mailto:quidnovum@gmail.com" target="_blank">quidnovum@gmail.com</a>
+						</span>
+						<span className="pullover-bars"><i className="fa fa-bars"></i></span>
+					</div>
+				</div>
+
+				<ChangeBankModal isOpen={ this.state.visibleModal == "changeBank" }
+          onFinished={this.onBankChanged.bind(this)} />
         <LoadingModal isOpen={ this.state.visibleModal == "loading" } />
         <HelpModal isOpen={ this.state.visibleModal == "help" }
           onClosing={this.closeModal.bind(this)}/>
+
+
       </div>
     );
   }
