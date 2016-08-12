@@ -24,13 +24,104 @@ function range(l) {
 // }());
 
 class QuestionContainer extends React.Component {
+
+	constructor(props) {
+		super(props);
+
+		this.state = {
+			readTimer: -1,
+			wordIndex: 0,
+			curQuestionWords: {
+				question: "",
+				meta: []
+			}
+		};
+	}
+
+	componentWillReceiveProps(nextProps) {
+		this.setState({
+			curQuestionWords: (nextProps.questionData.textList[nextProps.questionData.curInd] || {
+				question: "",
+				meta: []
+			})
+		});
+
+
+    if (nextProps.readerState != this.props.readerState) {
+      if (nextProps.readerState == "READING") {
+        this.setState({
+					wordIndex: 0,
+					readTimer: setInterval(function() {
+						if (this.state.wordIndex < this.state.curQuestionWords.question.split(" ").length) {
+							this.setState({wordIndex: this.state.wordIndex + 1});
+						} else {
+							clearInterval(this.state.readTimer);
+							this.setState({
+								readTimer: -1
+							});
+							this.props.onReadingFinished();
+						}
+					}.bind(this), 200)
+				});
+      }
+
+			if (this.props.readerState == "READING") {
+				clearInterval(this.state.readTimer);
+				this.setState({
+					readTimer: -1
+				});
+			}
+
+			if (this.props.readerState == "SHOWING") {
+
+			}
+    }
+  }
+
   render() {
+		let qMeta = this.state.curQuestionWords.meta;
+
+		let wordArray = this.state.curQuestionWords.question.split(" ");
+		let beforeWords = wordArray.slice(0, this.state.wordIndex).join(" ");
+		let afterWords = wordArray.slice(this.state.wordIndex).join(" ");
+
+		let visibleText;
+
+		if (this.props.readerState == "READING") {
+			visibleText = beforeWords;
+		} else if (this.props.readerState == "WAITING") {
+			visibleText = beforeWords + " (#)";
+		} else if (this.props.readerState == "SHOWING") {
+			visibleText = beforeWords + " (#) " + afterWords;
+		}
+
     return (
       <div id="questiontext">
-  			<div id="qtextcont">{
-					(this.props.questionData.textList[0] || {question: ""}).question
-				}</div>
-  			<span id="msg"><em>Press [Space] to buzz</em></span>
+  			<div id="qtextcont">
+					<p>
+						<b>{ qMeta.length > 0 ? `${qMeta[2]} ${qMeta[1]} | ${qMeta[5]} - ${qMeta[6]}` : "" }</b>
+						<span style={{float: "right"}}>{
+							qMeta.length > 0 ?
+							`(Question ${this.props.questionData.textList.length - this.props.questionData.indList.length + 1} of ${this.props.questionData.textList.length})`
+							: ""
+							}
+						</span>
+					</p>
+					<p> { visibleText } </p>
+					{
+						(this.props.readerState == "SHOWING") ? (<p>
+							<em><strong>Answer: </strong></em>
+							{ this.state.curQuestionWords.answer }
+						</p>) : null
+					}
+				</div>
+  			<span id="msg"><em>Press [Space] {
+					{
+						"READING": "to buzz",
+						"WAITING": "to see the answer",
+						"SHOWING": "for the next question"
+					}[this.props.readerState]
+				}</em></span>
   		</div>
     );
   }
@@ -68,13 +159,21 @@ class App extends React.Component {
     this.state = {
       "isMobile": false,
       "visibleModal": "none",
-			"readingState": "READING",
+			"readingState": "PAUSED",
 			"questions": {
 				textList: [],
 				indList: [],
 				curInd: -1
 			}
     };
+		setTimeout(this.onBankChanged.bind(this, [{
+			query: "",
+			category: "Mythology",
+			subCategory: "None",
+			searchType: "Answer",
+			difficulty: "HS",
+			tournament: "All",
+		}], true), 0);
   }
 
   openBankModal() { this.setState({"visibleModal": "changeBank"}); }
@@ -90,7 +189,7 @@ class App extends React.Component {
 				this.closeModal();
 			}.bind(this));
 		} else {
-			closeModal();
+			this.closeModal();
 		}
 	}
 
@@ -105,7 +204,7 @@ class App extends React.Component {
 				url: "/php/searchDatabase.php",
 				data: {
 					limit: isLimit,
-					info: formdata.search,
+					info: formdata.query,
 					categ: formdata.category,
 					sub: formdata.subCategory,
 					stype: formdata.searchType,
@@ -117,41 +216,45 @@ class App extends React.Component {
 					var sliceI = (isLimit == "yes") ? [1, -2] : [0, -1];
 					var qArray = data.replace(/\s+/g, " ").split("<hr>").slice(sliceI[0], sliceI[1]).map(function(s) {
 						var parts = s.match(/<p>.+?<\/p>/g);
+						let meta = parts[0].replace("ID: ", " | ID: ").replace(/<.+?>/g, "").split(" | ");
+						if (meta[6] === "") {
+							meta[6] = "None";
+						}
 						return {
-							meta: parts[0].replace(/<.+?>/g, "").split(" | "),
+							meta: meta,
 							question: parts[1].replace(/<.+?>/g, "").replace(/^Question: /, ""),
-							answer: parts[2].replace(/<.+?>/g, "").replace(/^Answer: /, "")
+							answer: parts[2].replace(/<.+?>/g, "").replace(/^Answer: /i, "")
 						};
 					});
 					questionArray = questionArray.concat(qArray);
-					console.log("retrieved");
 					asyncCB();
 				}
 			});
 		}, function(err) {
 			if (err) throw err;
-			console.log("calling back");
 			callback(questionArray);
 		});
 	}
 
 	retrieveQuestionSet(questionFilters, callback) {
 		var fullQuestionArray = [];
-		console.log("hi1");
 		// TODO: add some sort of system to remove duplicates from question bank
 		async.each(questionFilters, function(questionFilter, asyncCB) {
 
 			this.retrieveDatabase(questionFilter, function(qArray) {
-				console.log("hi2");
 				fullQuestionArray = fullQuestionArray.concat(qArray);
 				asyncCB();
 			});
 		}.bind(this), function(err) {
 			if (err) throw err;
-			console.log("start");
+
+			if (fullQuestionArray.length < 1) {
+				this.openBankModal();
+				return;
+			}
 
 			var indList = range(fullQuestionArray.length);
-
+			// console.log(fullQuestionArray[0]);
 			this.setState({
 				questions: {
 					textList: fullQuestionArray,
@@ -161,10 +264,49 @@ class App extends React.Component {
 				readerState: "READING"
 			});
 
-			console.log("hey");
 
 			callback();
 		}.bind(this));
+	}
+
+	onKeyPress(ev) {
+		if (ev.keyCode == 32) { // Space
+
+			if (this.state.readerState == "READING") {
+				this.setState({readerState: "WAITING"});
+			} else if (this.state.readerState == "WAITING") {
+				// $("#questiontext #qtextcont p:nth-child(2)").get(0).innerHTML += wordsToBeRead.join(" ");
+				// $("#questiontext #qtextcont p:last-child").show();
+				this.setState({readerState: "SHOWING"});
+			} else if (this.state.readerState == "SHOWING") {
+				// $("#newquestion").click();
+				let qIndex = this.state.questions.indList.indexOf(this.state.questions.curInd);
+				let newIndList = this.state.questions.indList.slice(0, qIndex)
+					.concat(this.state.questions.indList.slice(qIndex + 1));
+
+				this.setState({
+					questions: {
+						textList: this.state.questions.textList,
+						indList: newIndList,
+						curInd: choose(newIndList)
+					},
+					readerState: "READING"
+				});
+			}
+		} else if (ev.keyCode == 99) { // C
+			// annotate
+		} else if (ev.keyCode == 110) { // N
+			// next
+			// this.setState({readerState: "READING"});
+		}
+	}
+
+	componentDidMount() {
+		window.addEventListener('keypress', this.onKeyPress.bind(this));
+	}
+
+	componentWillUnmount() {
+		window.removeEventListener('keypress', this.onKeyPress.bind(this));
 	}
 
   render() {
@@ -172,7 +314,10 @@ class App extends React.Component {
     return (
       <div>
 				<div className="appContent">
-	        <QuestionContainer questionData={this.state.questions} readerState={this.state.readerState}/>
+	        <QuestionContainer
+						questionData={this.state.questions}
+						readerState={this.state.readerState}
+						onReadingFinished={ function() {this.setState({readerState: "WAITING"});}.bind(this)}/>
 	        <UIContainer buttons={
 	          {
 	            "next": function() {}.bind(this),
@@ -194,12 +339,12 @@ class App extends React.Component {
 					</div>
 				</div>
 
-				<ChangeBankModal isOpen={ this.state.visibleModal == "changeBank" }
+				<ChangeBankModal
+					isOpen={ this.state.visibleModal == "changeBank" }
           onFinished={this.onBankChanged.bind(this)} />
         <LoadingModal isOpen={ this.state.visibleModal == "loading" } />
         <HelpModal isOpen={ this.state.visibleModal == "help" }
           onClosing={this.closeModal.bind(this)}/>
-
 
       </div>
     );
@@ -223,19 +368,6 @@ addEventListener("load", () => {
 //
 // 	var wordSpeed = 200;
 //
-// 	// Select question to be read and actuate it if applicable
-// 	function updateQuestion(callback) {
-// 		arrSize = questionArray.length;
-// 		if (arrSize === 0) {
-// 			currentQuestion = null;
-// 		} else {
-// 			currentQuestion = choose(questionArray);
-// 			actuateQuestion();
-// 		}
-// 		if (callback) {
-// 			callback(arrSize);
-// 		}
-// 	}
 //
 // 	// Render a question and start the reader. After complete, call the callback.
 // 	function actuateQuestion() {
@@ -267,53 +399,6 @@ addEventListener("load", () => {
 // 		readerState = "READING";
 // 	}
 //
-// 	// Download the entire database associated with the given form data. After finished, callback.
-// 	function downloadNewDatabase(formdata, callback) {
-// 		async.each(["yes", "no"], function(isLimit, asyncCB) {
-// 			$.ajax({
-// 				url: "/php/searchDatabase.php",
-// 				data: {
-// 					limit: "yes",
-// 					info: formdata.questionQuery,
-// 					categ: formdata.optionCategory,
-// 					sub: formdata.optionSubcategory,
-// 					stype: formdata.optionSType,
-// 					qtype: "Tossups",
-// 					difficulty: formdata.optionDifficulty,
-// 					tournamentyear: formdata.optionTournament
-// 				},
-// 				success: function(data) {
-// 					var sliceI = (isLimit == "yes") ? [1, -2] : [0, -1];
-// 					questionArray = questionArray.concat(data.replace(/\s+/g, " ").split("<hr>").slice(sliceI[0], sliceI[1]));
-// 					asyncCB();
-// 				}
-// 			});
-// 		}, function(err) {
-// 			callback();
-// 		});
-// 	}
-//
-// 	// Download the aggregate database containing all entries from all filters
-// 	function getDatabases(startI, callback) {
-//
-// 		var filterElems = $("table.filterarea > tbody > tr > td");
-// 		async.each(range(filterElems.length), function(i, asyncCB) {
-// 			// For each index corresponding to a filter...
-// 			var curNode = filterElems.get(i);
-// 			downloadNewDatabase({
-// 				questionQuery: 		$(curNode).find("> table.filter .questionquery").val(),
-// 				optionCategory: 	$(curNode).find("> table.filter .optionCategory").val(),
-// 				optionSubcategory: 	$(curNode).find("> table.filter .optionSubcategory").val(),
-// 				optionSType: 		$(curNode).find("> table.filter .optionSType").val(),
-// 				optionDifficulty: 	$(curNode).find("> table.filter .optionDifficulty").val(),
-// 				optionTournament:   $(curNode).find("> table.filter .optionTournament").val()
-// 			}, asyncCB);
-//
-// 		}, function(err) {
-// 			updateQuestion(callback);
-// 		});
-//
-// 	}
 //
 //
 // 	$("#newquestion").click(function() {

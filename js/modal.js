@@ -61,19 +61,21 @@ class QuestionFilter extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      subcategories: ["None"],
+      subcategories: [{techName: "", visName: "None"}],
       tournaments: ["All"]
     };
-    $.get("/php/loadSubcategories.php", {
-      category: this.props.values.category
-    }, function(data) {
-      this.setState({
-        subcategories: (data.match(/<option.+?>.+?<\/option>/g) || []).map(s => {
-          let regexMatch = s.match(/<option.+?value=["'](.+?)["'].*?>(.+?)<\/option>/);
-          return {techName: regexMatch[1], visName: regexMatch[2]};
-        })
-      });
-    }.bind(this));
+
+    // $.get("/php/loadSubcategories.php", {
+    //   category: this.props.values.category
+    // }, function(data) {
+    //   this.setState({
+    //     subcategories: (data.match(/<option.+?>.+?<\/option>/g) || []).map(s => {
+    //       let regexMatch = s.match(/<option.+?value=["'](.+?)["'].*?>(.+?)<\/option>/);
+    //       return {techName: regexMatch[1], visName: regexMatch[2]};
+    //     })
+    //   });
+    // }.bind(this));
+
     $.get("/php/loadTournaments.php", {
       qtype: "Tossups",
       difficulty: this.props.values.difficulty
@@ -85,6 +87,7 @@ class QuestionFilter extends React.Component {
         })
       });
     }.bind(this));
+
   }
 
   onCategoryChange() {
@@ -93,9 +96,9 @@ class QuestionFilter extends React.Component {
       category: this.refs.category.value
     }, function(data) {
       this.setState({
-        subcategories: data.match(/<option.+?>.+?<\/option>/g).map(s => {
-          let regexMatch = s.match(/<option.+?value=["'](.+?)["'].*?>(.+?)<\/option>/);
-          return {techName: regexMatch[1], visName: regexMatch[2]};
+        subcategories: data.match(/<option.*?>.+?<\/option>/g).map(s => {
+          let regexMatch = s.match(/<option(.+?value=["'](.+?)["'])?.*?>(.+?)<\/option>/);
+          return {techName: regexMatch[2], visName: regexMatch[3]};
         })
       });
       this.updateParent();
@@ -120,7 +123,7 @@ class QuestionFilter extends React.Component {
 
   updateParent() {
     var data = {};
-    for (let name of ["search", "category", "subCategory", "searchType", "difficulty", "tournament"]) {
+    for (let name of ["query", "category", "subCategory", "searchType", "difficulty", "tournament"]) {
       data[name] = this.refs[name].value;
     }
     data.key = this.props.values.key;
@@ -132,7 +135,7 @@ class QuestionFilter extends React.Component {
       <table className="filter">
         <tbody>
           <ModalInputField fieldName="Search">
-            <input className="questionquery" ref="search" value={ this.props.values.search } onChange={ this.updateParent.bind(this) }/>
+            <input type="text" className="questionquery" ref="query" value={ this.props.values.query } onChange={ this.updateParent.bind(this) }/>
           </ModalInputField>
 
           <ModalInputField fieldName="Category">
@@ -202,7 +205,6 @@ class ChangeBankModal extends React.Component {
 
   constructor(props) {
     super(props);
-    this.curFilterKey = 0;
     this.state = {
       questionFilters: [{
         search: "",
@@ -211,23 +213,25 @@ class ChangeBankModal extends React.Component {
         searchType: "Answer",
         difficulty: "HS",
         tournament: "All",
-        key: ++this.curFilterKey
+        key: 0
       }],
+      curFilterKey: 1,
       formerFilters: []
     };
   }
 
   addQuestionFilter() {
     this.setState({
-      questionFilters: this.state.questionFilters.concat({
-        search: "",
+      questionFilters: this.state.questionFilters.concat([{
+        query: "",
         category: "Mythology",
         subCategory: "None",
         searchType: "Answer",
         difficulty: "HS",
         tournament: "All",
-        key: ++this.curFilterKey // TODO: keep the value of "key" from the QuestionFilter components
-      })
+        key: this.state.curFilterKey // TODO: keep the value of "key" from the QuestionFilter components
+      }]),
+      curFilterKey: this.state.curFilterKey + 1
     });
   }
 
@@ -236,9 +240,9 @@ class ChangeBankModal extends React.Component {
   }
 
   updateQuestionFilter(ind, data) {
-    let newQuestionFilters = Object.create(this.state.questionFilters);
-    newQuestionFilters[ind] = data;
-    this.setState({questionFilters: newQuestionFilters});
+    // let newQuestionFilters = Object.create(this.state.questionFilters);
+    this.state.questionFilters[ind] = data;
+    this.setState({questionFilters: this.state.questionFilters});
   }
 
   componentWillReceiveProps(nextProps) {

@@ -153,6 +153,7 @@ div.textcontainer {
 	text-align:center;
 	border-radius: 4px;
 	box-shadow: 9px 6px 29px 5px rgba(0,0,0,0.75);
+	z-index: 30;
 
   // width: calc(37% - (0.3em + 1em) * 2);
   // min-width: 300px;
@@ -259,6 +260,8 @@ div.textcontainer {
   height: 100%;
   background-color: rgb(0, 0, 0);
   opacity: 0.5;
+	z-index: 20;
+	
 	&.modal-anim-enter {
 		opacity: 0.00;
 		transition: all 0.3s;
@@ -448,7 +451,7 @@ b, strong {
 	height: 200px;
 	transform: translate(-50%, -95%);
 	transition: transform 0.5s, box-shadow 0.5s;
-	z-index: 100;
+	z-index: 10;
 	text-align: center;
 
 	> span.attribution {

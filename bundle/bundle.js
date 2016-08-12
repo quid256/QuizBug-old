@@ -125,19 +125,21 @@ var QuestionFilter = function (_React$Component3) {
     var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(QuestionFilter).call(this, props));
 
     _this3.state = {
-      subcategories: ["None"],
+      subcategories: [{ techName: "", visName: "None" }],
       tournaments: ["All"]
     };
-    $.get("/php/loadSubcategories.php", {
-      category: _this3.props.values.category
-    }, function (data) {
-      this.setState({
-        subcategories: (data.match(/<option.+?>.+?<\/option>/g) || []).map(function (s) {
-          var regexMatch = s.match(/<option.+?value=["'](.+?)["'].*?>(.+?)<\/option>/);
-          return { techName: regexMatch[1], visName: regexMatch[2] };
-        })
-      });
-    }.bind(_this3));
+
+    // $.get("/php/loadSubcategories.php", {
+    //   category: this.props.values.category
+    // }, function(data) {
+    //   this.setState({
+    //     subcategories: (data.match(/<option.+?>.+?<\/option>/g) || []).map(s => {
+    //       let regexMatch = s.match(/<option.+?value=["'](.+?)["'].*?>(.+?)<\/option>/);
+    //       return {techName: regexMatch[1], visName: regexMatch[2]};
+    //     })
+    //   });
+    // }.bind(this));
+
     $.get("/php/loadTournaments.php", {
       qtype: "Tossups",
       difficulty: _this3.props.values.difficulty
@@ -149,6 +151,7 @@ var QuestionFilter = function (_React$Component3) {
         })
       });
     }.bind(_this3));
+
     return _this3;
   }
 
@@ -160,9 +163,9 @@ var QuestionFilter = function (_React$Component3) {
         category: this.refs.category.value
       }, function (data) {
         this.setState({
-          subcategories: data.match(/<option.+?>.+?<\/option>/g).map(function (s) {
-            var regexMatch = s.match(/<option.+?value=["'](.+?)["'].*?>(.+?)<\/option>/);
-            return { techName: regexMatch[1], visName: regexMatch[2] };
+          subcategories: data.match(/<option.*?>.+?<\/option>/g).map(function (s) {
+            var regexMatch = s.match(/<option(.+?value=["'](.+?)["'])?.*?>(.+?)<\/option>/);
+            return { techName: regexMatch[2], visName: regexMatch[3] };
           })
         });
         this.updateParent();
@@ -189,7 +192,7 @@ var QuestionFilter = function (_React$Component3) {
     key: "updateParent",
     value: function updateParent() {
       var data = {};
-      var _arr = ["search", "category", "subCategory", "searchType", "difficulty", "tournament"];
+      var _arr = ["query", "category", "subCategory", "searchType", "difficulty", "tournament"];
       for (var _i = 0; _i < _arr.length; _i++) {
         var name = _arr[_i];
         data[name] = this.refs[name].value;
@@ -215,7 +218,7 @@ var QuestionFilter = function (_React$Component3) {
             ModalInputField,
             { fieldName: "Search", __self: this
             },
-            React.createElement("input", { className: "questionquery", ref: "search", value: this.props.values.search, onChange: this.updateParent.bind(this), __self: this
+            React.createElement("input", { type: "text", className: "questionquery", ref: "query", value: this.props.values.query, onChange: this.updateParent.bind(this), __self: this
             })
           ),
           React.createElement(
@@ -376,7 +379,6 @@ var ChangeBankModal = function (_React$Component4) {
 
     var _this5 = _possibleConstructorReturn(this, Object.getPrototypeOf(ChangeBankModal).call(this, props));
 
-    _this5.curFilterKey = 0;
     _this5.state = {
       questionFilters: [{
         search: "",
@@ -385,8 +387,9 @@ var ChangeBankModal = function (_React$Component4) {
         searchType: "Answer",
         difficulty: "HS",
         tournament: "All",
-        key: ++_this5.curFilterKey
+        key: 0
       }],
+      curFilterKey: 1,
       formerFilters: []
     };
     return _this5;
@@ -396,15 +399,16 @@ var ChangeBankModal = function (_React$Component4) {
     key: "addQuestionFilter",
     value: function addQuestionFilter() {
       this.setState({
-        questionFilters: this.state.questionFilters.concat({
-          search: "",
+        questionFilters: this.state.questionFilters.concat([{
+          query: "",
           category: "Mythology",
           subCategory: "None",
           searchType: "Answer",
           difficulty: "HS",
           tournament: "All",
-          key: ++this.curFilterKey // TODO: keep the value of "key" from the QuestionFilter components
-        })
+          key: this.state.curFilterKey // TODO: keep the value of "key" from the QuestionFilter components
+        }]),
+        curFilterKey: this.state.curFilterKey + 1
       });
     }
   }, {
@@ -415,9 +419,9 @@ var ChangeBankModal = function (_React$Component4) {
   }, {
     key: "updateQuestionFilter",
     value: function updateQuestionFilter(ind, data) {
-      var newQuestionFilters = Object.create(this.state.questionFilters);
-      newQuestionFilters[ind] = data;
-      this.setState({ questionFilters: newQuestionFilters });
+      // let newQuestionFilters = Object.create(this.state.questionFilters);
+      this.state.questionFilters[ind] = data;
+      this.setState({ questionFilters: this.state.questionFilters });
     }
   }, {
     key: "componentWillReceiveProps",
@@ -788,15 +792,79 @@ function range(l) {
 var QuestionContainer = function (_React$Component) {
 	_inherits(QuestionContainer, _React$Component);
 
-	function QuestionContainer() {
+	function QuestionContainer(props) {
 		_classCallCheck(this, QuestionContainer);
 
-		return _possibleConstructorReturn(this, Object.getPrototypeOf(QuestionContainer).apply(this, arguments));
+		var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(QuestionContainer).call(this, props));
+
+		_this.state = {
+			readTimer: -1,
+			wordIndex: 0,
+			curQuestionWords: {
+				question: "",
+				meta: []
+			}
+		};
+		return _this;
 	}
 
 	_createClass(QuestionContainer, [{
+		key: 'componentWillReceiveProps',
+		value: function componentWillReceiveProps(nextProps) {
+			this.setState({
+				curQuestionWords: nextProps.questionData.textList[nextProps.questionData.curInd] || {
+					question: "",
+					meta: []
+				}
+			});
+
+			if (nextProps.readerState != this.props.readerState) {
+				if (nextProps.readerState == "READING") {
+					this.setState({
+						wordIndex: 0,
+						readTimer: setInterval(function () {
+							if (this.state.wordIndex < this.state.curQuestionWords.question.split(" ").length) {
+								this.setState({ wordIndex: this.state.wordIndex + 1 });
+							} else {
+								clearInterval(this.state.readTimer);
+								this.setState({
+									readTimer: -1
+								});
+								this.props.onReadingFinished();
+							}
+						}.bind(this), 200)
+					});
+				}
+
+				if (this.props.readerState == "READING") {
+					clearInterval(this.state.readTimer);
+					this.setState({
+						readTimer: -1
+					});
+				}
+
+				if (this.props.readerState == "SHOWING") {}
+			}
+		}
+	}, {
 		key: 'render',
 		value: function render() {
+			var qMeta = this.state.curQuestionWords.meta;
+
+			var wordArray = this.state.curQuestionWords.question.split(" ");
+			var beforeWords = wordArray.slice(0, this.state.wordIndex).join(" ");
+			var afterWords = wordArray.slice(this.state.wordIndex).join(" ");
+
+			var visibleText = void 0;
+
+			if (this.props.readerState == "READING") {
+				visibleText = beforeWords;
+			} else if (this.props.readerState == "WAITING") {
+				visibleText = beforeWords + " (#)";
+			} else if (this.props.readerState == "SHOWING") {
+				visibleText = beforeWords + " (#) " + afterWords;
+			}
+
 			return React.createElement(
 				'div',
 				{ id: 'questiontext', __self: this
@@ -805,7 +873,54 @@ var QuestionContainer = function (_React$Component) {
 					'div',
 					{ id: 'qtextcont', __self: this
 					},
-					(this.props.questionData.textList[0] || { question: "" }).question
+					React.createElement(
+						'p',
+						{
+							__self: this
+						},
+						React.createElement(
+							'b',
+							{
+								__self: this
+							},
+							qMeta.length > 0 ? qMeta[2] + ' ' + qMeta[1] + ' | ' + qMeta[5] + ' - ' + qMeta[6] : ""
+						),
+						React.createElement(
+							'span',
+							{ style: { float: "right" }, __self: this
+							},
+							qMeta.length > 0 ? '(Question ' + (this.props.questionData.textList.length - this.props.questionData.indList.length + 1) + ' of ' + this.props.questionData.textList.length + ')' : ""
+						)
+					),
+					React.createElement(
+						'p',
+						{
+							__self: this
+						},
+						' ',
+						visibleText,
+						' '
+					),
+					this.props.readerState == "SHOWING" ? React.createElement(
+						'p',
+						{
+							__self: this
+						},
+						React.createElement(
+							'em',
+							{
+								__self: this
+							},
+							React.createElement(
+								'strong',
+								{
+									__self: this
+								},
+								'Answer: '
+							)
+						),
+						this.state.curQuestionWords.answer
+					) : null
 				),
 				React.createElement(
 					'span',
@@ -816,7 +931,12 @@ var QuestionContainer = function (_React$Component) {
 						{
 							__self: this
 						},
-						'Press [Space] to buzz'
+						'Press [Space] ',
+						{
+							"READING": "to buzz",
+							"WAITING": "to see the answer",
+							"SHOWING": "for the next question"
+						}[this.props.readerState]
 					)
 				)
 			);
@@ -990,13 +1110,21 @@ var App = function (_React$Component3) {
 		_this3.state = {
 			"isMobile": false,
 			"visibleModal": "none",
-			"readingState": "READING",
+			"readingState": "PAUSED",
 			"questions": {
 				textList: [],
 				indList: [],
 				curInd: -1
 			}
 		};
+		setTimeout(_this3.onBankChanged.bind(_this3, [{
+			query: "",
+			category: "Mythology",
+			subCategory: "None",
+			searchType: "Answer",
+			difficulty: "HS",
+			tournament: "All"
+		}], true), 0);
 		return _this3;
 	}
 
@@ -1029,7 +1157,7 @@ var App = function (_React$Component3) {
 					this.closeModal();
 				}.bind(this));
 			} else {
-				closeModal();
+				this.closeModal();
 			}
 		}
 	}, {
@@ -1044,7 +1172,7 @@ var App = function (_React$Component3) {
 					url: "/php/searchDatabase.php",
 					data: {
 						limit: isLimit,
-						info: formdata.search,
+						info: formdata.query,
 						categ: formdata.category,
 						sub: formdata.subCategory,
 						stype: formdata.searchType,
@@ -1056,20 +1184,22 @@ var App = function (_React$Component3) {
 						var sliceI = isLimit == "yes" ? [1, -2] : [0, -1];
 						var qArray = data.replace(/\s+/g, " ").split("<hr>").slice(sliceI[0], sliceI[1]).map(function (s) {
 							var parts = s.match(/<p>.+?<\/p>/g);
+							var meta = parts[0].replace("ID: ", " | ID: ").replace(/<.+?>/g, "").split(" | ");
+							if (meta[6] === "") {
+								meta[6] = "None";
+							}
 							return {
-								meta: parts[0].replace(/<.+?>/g, "").split(" | "),
+								meta: meta,
 								question: parts[1].replace(/<.+?>/g, "").replace(/^Question: /, ""),
-								answer: parts[2].replace(/<.+?>/g, "").replace(/^Answer: /, "")
+								answer: parts[2].replace(/<.+?>/g, "").replace(/^Answer: /i, "")
 							};
 						});
 						questionArray = questionArray.concat(qArray);
-						console.log("retrieved");
 						asyncCB();
 					}
 				});
 			}, function (err) {
 				if (err) throw err;
-				console.log("calling back");
 				callback(questionArray);
 			});
 		}
@@ -1077,21 +1207,23 @@ var App = function (_React$Component3) {
 		key: 'retrieveQuestionSet',
 		value: function retrieveQuestionSet(questionFilters, callback) {
 			var fullQuestionArray = [];
-			console.log("hi1");
 			// TODO: add some sort of system to remove duplicates from question bank
 			async.each(questionFilters, function (questionFilter, asyncCB) {
 
 				this.retrieveDatabase(questionFilter, function (qArray) {
-					console.log("hi2");
 					fullQuestionArray = fullQuestionArray.concat(qArray);
 					asyncCB();
 				});
 			}.bind(this), function (err) {
 				if (err) throw err;
-				console.log("start");
+
+				if (fullQuestionArray.length < 1) {
+					this.openBankModal();
+					return;
+				}
 
 				var indList = range(fullQuestionArray.length);
-
+				// console.log(fullQuestionArray[0]);
 				this.setState({
 					questions: {
 						textList: fullQuestionArray,
@@ -1101,10 +1233,51 @@ var App = function (_React$Component3) {
 					readerState: "READING"
 				});
 
-				console.log("hey");
-
 				callback();
 			}.bind(this));
+		}
+	}, {
+		key: 'onKeyPress',
+		value: function onKeyPress(ev) {
+			if (ev.keyCode == 32) {
+				// Space
+
+				if (this.state.readerState == "READING") {
+					this.setState({ readerState: "WAITING" });
+				} else if (this.state.readerState == "WAITING") {
+					// $("#questiontext #qtextcont p:nth-child(2)").get(0).innerHTML += wordsToBeRead.join(" ");
+					// $("#questiontext #qtextcont p:last-child").show();
+					this.setState({ readerState: "SHOWING" });
+				} else if (this.state.readerState == "SHOWING") {
+					// $("#newquestion").click();
+					var qIndex = this.state.questions.indList.indexOf(this.state.questions.curInd);
+					var newIndList = this.state.questions.indList.slice(0, qIndex).concat(this.state.questions.indList.slice(qIndex + 1));
+
+					this.setState({
+						questions: {
+							textList: this.state.questions.textList,
+							indList: newIndList,
+							curInd: choose(newIndList)
+						},
+						readerState: "READING"
+					});
+				}
+			} else if (ev.keyCode == 99) {// C
+				// annotate
+			} else if (ev.keyCode == 110) {// N
+				// next
+				// this.setState({readerState: "READING"});
+			}
+		}
+	}, {
+		key: 'componentDidMount',
+		value: function componentDidMount() {
+			window.addEventListener('keypress', this.onKeyPress.bind(this));
+		}
+	}, {
+		key: 'componentWillUnmount',
+		value: function componentWillUnmount() {
+			window.removeEventListener('keypress', this.onKeyPress.bind(this));
 		}
 	}, {
 		key: 'render',
@@ -1119,7 +1292,12 @@ var App = function (_React$Component3) {
 					'div',
 					{ className: 'appContent', __self: this
 					},
-					React.createElement(QuestionContainer, { questionData: this.state.questions, readerState: this.state.readerState, __self: this
+					React.createElement(QuestionContainer, {
+						questionData: this.state.questions,
+						readerState: this.state.readerState,
+						onReadingFinished: function () {
+							this.setState({ readerState: "WAITING" });
+						}.bind(this), __self: this
 					}),
 					React.createElement(UIContainer, { buttons: {
 							"next": function () {}.bind(this),
@@ -1175,7 +1353,8 @@ var App = function (_React$Component3) {
 						)
 					)
 				),
-				React.createElement(ChangeBankModal, { isOpen: this.state.visibleModal == "changeBank",
+				React.createElement(ChangeBankModal, {
+					isOpen: this.state.visibleModal == "changeBank",
 					onFinished: this.onBankChanged.bind(this), __self: this
 				}),
 				React.createElement(LoadingModal, { isOpen: this.state.visibleModal == "loading", __self: this
@@ -1209,19 +1388,6 @@ addEventListener("load", function () {
 //
 // 	var wordSpeed = 200;
 //
-// 	// Select question to be read and actuate it if applicable
-// 	function updateQuestion(callback) {
-// 		arrSize = questionArray.length;
-// 		if (arrSize === 0) {
-// 			currentQuestion = null;
-// 		} else {
-// 			currentQuestion = choose(questionArray);
-// 			actuateQuestion();
-// 		}
-// 		if (callback) {
-// 			callback(arrSize);
-// 		}
-// 	}
 //
 // 	// Render a question and start the reader. After complete, call the callback.
 // 	function actuateQuestion() {
@@ -1253,53 +1419,6 @@ addEventListener("load", function () {
 // 		readerState = "READING";
 // 	}
 //
-// 	// Download the entire database associated with the given form data. After finished, callback.
-// 	function downloadNewDatabase(formdata, callback) {
-// 		async.each(["yes", "no"], function(isLimit, asyncCB) {
-// 			$.ajax({
-// 				url: "/php/searchDatabase.php",
-// 				data: {
-// 					limit: "yes",
-// 					info: formdata.questionQuery,
-// 					categ: formdata.optionCategory,
-// 					sub: formdata.optionSubcategory,
-// 					stype: formdata.optionSType,
-// 					qtype: "Tossups",
-// 					difficulty: formdata.optionDifficulty,
-// 					tournamentyear: formdata.optionTournament
-// 				},
-// 				success: function(data) {
-// 					var sliceI = (isLimit == "yes") ? [1, -2] : [0, -1];
-// 					questionArray = questionArray.concat(data.replace(/\s+/g, " ").split("<hr>").slice(sliceI[0], sliceI[1]));
-// 					asyncCB();
-// 				}
-// 			});
-// 		}, function(err) {
-// 			callback();
-// 		});
-// 	}
-//
-// 	// Download the aggregate database containing all entries from all filters
-// 	function getDatabases(startI, callback) {
-//
-// 		var filterElems = $("table.filterarea > tbody > tr > td");
-// 		async.each(range(filterElems.length), function(i, asyncCB) {
-// 			// For each index corresponding to a filter...
-// 			var curNode = filterElems.get(i);
-// 			downloadNewDatabase({
-// 				questionQuery: 		$(curNode).find("> table.filter .questionquery").val(),
-// 				optionCategory: 	$(curNode).find("> table.filter .optionCategory").val(),
-// 				optionSubcategory: 	$(curNode).find("> table.filter .optionSubcategory").val(),
-// 				optionSType: 		$(curNode).find("> table.filter .optionSType").val(),
-// 				optionDifficulty: 	$(curNode).find("> table.filter .optionDifficulty").val(),
-// 				optionTournament:   $(curNode).find("> table.filter .optionTournament").val()
-// 			}, asyncCB);
-//
-// 		}, function(err) {
-// 			updateQuestion(callback);
-// 		});
-//
-// 	}
 //
 //
 // 	$("#newquestion").click(function() {
