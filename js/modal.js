@@ -135,7 +135,7 @@ class QuestionFilter extends React.Component {
       <table className="filter">
         <tbody>
           <ModalInputField fieldName="Search">
-            <input type="text" className="questionquery" ref="query" value={ this.props.values.query } onChange={ this.updateParent.bind(this) }/>
+            <input type="text" className="questionquery" ref="query" defaultValue={ this.props.values.query } onChange={ this.updateParent.bind(this) }/>
           </ModalInputField>
 
           <ModalInputField fieldName="Category">
@@ -268,13 +268,22 @@ class ChangeBankModal extends React.Component {
   render() {
     return (
       <Modal isOpen={ this.props.isOpen } onClosed={ this.closeModal.bind(this) }>
-        <div id="emptyMsg">There are no questions that match these criteria in Quinterest!</div>
+        <ReactCSSTransitionGroup
+          transitionName="emptyMsg-anim"
+          transitionEnterTimeout={300}
+          transitionLeaveTimeout={300}>
+          {
+            this.props.hasError ? (
+              <div className="emptyMsg" key="emptyMsg">There are no questions that match these criteria in Quinterest!</div>
+            ) : null
+          }
+        </ReactCSSTransitionGroup>
         <table className="filterarea">
           <tbody>
             <ReactCSSTransitionGroup
               transitionName="filter-anim"
-              transitionEnterTimeout={300}
-              transitionLeaveTimeout={300}
+              transitionEnterTimeout={500}
+              transitionLeaveTimeout={500}
               component="tr">
               { this.state.questionFilters.map((n, i) => (
                 <td key={ n.key } className="question-filter-cell">

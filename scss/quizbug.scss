@@ -61,11 +61,15 @@ html, body {
 	float: right;
 }
 
-#questiontext {
+.questiontext {
 	left: 2%;
 	right: 51%;
 	font-family: $mainfont;
 	overflow: hidden;
+
+	&.full {
+		right: 2%;
+	}
 
 	#qtextcont {
 		overflow-y: scroll;
@@ -98,14 +102,14 @@ span#msg {
 
 }
 
-#ui {
+.ui {
 	left: 51%;
 	right: 2%;
 	text-align: center;
 	overflow: hidden;
 }
 
-#questiontext, #ui {
+.questiontext, .ui {
 	@include border;
 	position: absolute;
 	padding: 10px;
@@ -261,7 +265,7 @@ div.textcontainer {
   background-color: rgb(0, 0, 0);
   opacity: 0.5;
 	z-index: 20;
-	
+
 	&.modal-anim-enter {
 		opacity: 0.00;
 		transition: all 0.3s;
@@ -278,15 +282,32 @@ div.textcontainer {
 	}
 }
 
-#emptyMsg {
+.emptyMsg {
 	position: absolute;
 	border-radius: 3px;
 	border: 3px solid #ff0000;
 	background-color: rgba(0, 0, 0, 0.9);
 	color: #FFFFFF;
 	font-family: $mainfont;
-	display: none;
-	width: calc(100% - 30px)
+	width: calc(100% - 30px);
+
+	&.emptyMsg-anim-enter {
+		opacity: 0;
+		transition: all 0.3s;
+	}
+
+	&.emptyMsg-anim-enter-active {
+		opacity: 1;
+	}
+
+	&.emptyMsg-anim-leave {
+		opacity: 1;
+	  transition: all 0.3s;
+	}
+
+	&.emptyMsg-anim-leave-active {
+		opacity: 0;
+	}
 
 }
 

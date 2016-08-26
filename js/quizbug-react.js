@@ -11,17 +11,8 @@ function range(l) {
 	return Array.apply(null, Array(l)).map(function (_, i) {return i;});
 }
 
-// // Create a data file that can be downloaded
-// var saveData = (function () {
-// 	var a = document.createElement("a");
-// 	document.body.appendChild(a);
-// 	a.style = "display: none";
-// 	return function (data, fileName) {
-// 		a.href = "data:text/plain;base64," + btoa(unescape(encodeURIComponent(data)));
-// 		a.download = fileName;
-// 		a.click();
-// 	};
-// }());
+// Create a data file that can be downloaded
+var saveData;
 
 class QuestionContainer extends React.Component {
 
@@ -34,7 +25,8 @@ class QuestionContainer extends React.Component {
 			curQuestionWords: {
 				question: "",
 				meta: []
-			}
+			},
+			curAnswer: ""
 		};
 	}
 
@@ -46,6 +38,17 @@ class QuestionContainer extends React.Component {
 			})
 		});
 
+		if (nextProps.questionData.curInd != this.props.questionData.curInd && nextProps.questionData.curInd !== null) {
+			this.setState({
+				wordIndex: 0
+			});
+		}
+
+		if (nextProps.setID != this.props.setID) {
+			this.setState({
+				wordIndex: 0
+			});
+		}
 
     if (nextProps.readerState != this.props.readerState) {
       if (nextProps.readerState == "READING") {
@@ -71,10 +74,6 @@ class QuestionContainer extends React.Component {
 					readTimer: -1
 				});
 			}
-
-			if (this.props.readerState == "SHOWING") {
-
-			}
     }
   }
 
@@ -93,10 +92,11 @@ class QuestionContainer extends React.Component {
 			visibleText = beforeWords + " (#)";
 		} else if (this.props.readerState == "SHOWING") {
 			visibleText = beforeWords + " (#) " + afterWords;
+
 		}
 
     return (
-      <div id="questiontext">
+      <div className={"questiontext" + (this.props.isMobile ? " full" : "")}>
   			<div id="qtextcont">
 					<p>
 						<b>{ qMeta.length > 0 ? `${qMeta[2]} ${qMeta[1]} | ${qMeta[5]} - ${qMeta[6]}` : "" }</b>
@@ -129,19 +129,71 @@ class QuestionContainer extends React.Component {
 
 class UIContainer extends React.Component {
 
+	constructor(props) {
+		super(props);
+	}
+
+	cardSelection() {
+		var selectedTextObj = window.getSelection().getRangeAt(0);
+		var selectedText = selectedTextObj.startContainer.data;
+		var startWordSel = selectedTextObj.startOffset;
+		while (selectedText.slice(startWordSel, startWordSel + 1) != " " && startWordSel > -1) {
+			startWordSel--;
+		}
+		startWordSel++;
+		var endWordSel = selectedTextObj.endOffset;
+		while (" ,.!?".indexOf(selectedText.slice(endWordSel, endWordSel + 1)) == -1 && endWordSel < selectedText.length) {
+			endWordSel++;
+		}
+
+		var modSelectedText = selectedText.slice(startWordSel, endWordSel);
+		if (window.getSelection().toString().length > 0) {
+			var answerLine = this.props.getAnswer();
+			this.refs.cardarea.value += modSelectedText + "\t" + answerLine + "\n";
+		}
+	}
+
+	onKeyPress(e) {
+		if (e.keyCode == 99) {
+			this.cardSelection();
+		}
+	}
+
+	componentDidMount() {
+		window.addEventListener('keypress', this.onKeyPress.bind(this));
+	}
+
+	componentWillUnmount() {
+		window.removeEventListener('keypress', this.onKeyPress.bind(this));
+	}
+
+	saveCardData() {
+		saveData(this.refs.cardarea.value, "cards.txt");
+	}
+
+	pressBttn(name) {
+
+		this.refs[name + "Bttn"].blur();
+
+		this.props.buttons[name]();
+	}
+
   render() {
+		if (this.props.isMobile) {
+			return null;
+		}
     return (
-      <div id="ui">
+      <div className="ui">
   			<table className="buttongroup"><tbody><tr>
-  				<td><button onClick={ this.props.buttons.next }><i className="fa fa-caret-square-o-right fa-lg"></i><span className="descr-inv"> NEXT</span> [N]</button></td>
-  				<td><button onClick={ this.props.buttons.questions }><i className="fa fa-refresh fa-lg"></i><span className="descr-inv"> QUESTIONS</span></button></td>
-  				<td><button onClick={ this.props.buttons.card }><i className="fa fa-file fa-lg"></i><span className="descr-inv"> NOTECARD</span> [C]</button></td>
-  				<td><button onClick={ this.props.buttons.download }><i className="fa fa-download fa-lg"></i><span className="descr-inv"> DOWNLOAD</span></button></td>
-  				<td><button onClick={ this.props.buttons.help }><i className="fa fa-info-circle fa-lg"></i></button></td>
+  				<td><button ref="nextBttn" onClick={ this.pressBttn.bind(this, "next") }><i className="fa fa-caret-square-o-right fa-lg"></i><span className="descr-inv"> NEXT</span> [N]</button></td>
+  				<td><button ref="questionsBttn" onClick={ this.pressBttn.bind(this, "questions") }><i className="fa fa-refresh fa-lg"></i><span className="descr-inv"> QUESTIONS</span></button></td>
+  				<td><button ref="cardBttn" onClick={ this.cardSelection.bind(this) }><i className="fa fa-file fa-lg"></i><span className="descr-inv"> NOTECARD</span> [C]</button></td>
+  				<td><button ref="saveBttn" onClick={ this.saveCardData.bind(this) }><i className="fa fa-download fa-lg"></i><span className="descr-inv"> DOWNLOAD</span></button></td>
+  				<td><button ref="helpBttn" onClick={ this.pressBttn.bind(this, "help") }><i className="fa fa-info-circle fa-lg"></i></button></td>
   			</tr></tbody></table>
 
   			<div className="textcontainer">
-  				<textarea></textarea>
+  				<textarea ref="cardarea"></textarea>
   			</div>
 
   			<span className="speedlabel">Question Speed: [slow]</span>
@@ -157,14 +209,18 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      "isMobile": false,
+			"isMobileReq": window.matchMedia("only screen and (max-width: 760px)"),
+      "isMobile": window.matchMedia("only screen and (max-width: 760px)").matches,
       "visibleModal": "none",
+			"bankModalError": false,
 			"readingState": "PAUSED",
 			"questions": {
 				textList: [],
 				indList: [],
 				curInd: -1
-			}
+			},
+			setID: 0,
+			"cardContent": ""
     };
 		setTimeout(this.onBankChanged.bind(this, [{
 			query: "",
@@ -191,10 +247,6 @@ class App extends React.Component {
 		} else {
 			this.closeModal();
 		}
-	}
-
-	chooseQuestion() {
-
 	}
 
 	retrieveDatabase(formdata, callback) {
@@ -249,7 +301,14 @@ class App extends React.Component {
 			if (err) throw err;
 
 			if (fullQuestionArray.length < 1) {
+				// No valid questions
+				this.setState({bankModalError: true});
 				this.openBankModal();
+
+				setTimeout(function() {
+					this.setState({bankModalError: false});
+				}.bind(this), 2000);
+
 				return;
 			}
 
@@ -261,6 +320,7 @@ class App extends React.Component {
 					indList: indList,
 					curInd: choose(indList)
 				},
+				setID: this.state.setID + 1,
 				readerState: "READING"
 			});
 
@@ -269,64 +329,92 @@ class App extends React.Component {
 		}.bind(this));
 	}
 
+
 	onKeyPress(ev) {
 		if (ev.keyCode == 32) { // Space
-
-			if (this.state.readerState == "READING") {
-				this.setState({readerState: "WAITING"});
-			} else if (this.state.readerState == "WAITING") {
-				// $("#questiontext #qtextcont p:nth-child(2)").get(0).innerHTML += wordsToBeRead.join(" ");
-				// $("#questiontext #qtextcont p:last-child").show();
-				this.setState({readerState: "SHOWING"});
-			} else if (this.state.readerState == "SHOWING") {
-				// $("#newquestion").click();
-				let qIndex = this.state.questions.indList.indexOf(this.state.questions.curInd);
-				let newIndList = this.state.questions.indList.slice(0, qIndex)
-					.concat(this.state.questions.indList.slice(qIndex + 1));
-
-				this.setState({
-					questions: {
-						textList: this.state.questions.textList,
-						indList: newIndList,
-						curInd: choose(newIndList)
-					},
-					readerState: "READING"
-				});
+			if (this.state.visibleModal == "none") {
+				if (this.state.readerState == "READING") {
+					this.setState({readerState: "WAITING"});
+				} else if (this.state.readerState == "WAITING") {
+					this.setState({readerState: "SHOWING"});
+				} else if (this.state.readerState == "SHOWING") {
+					this.nextQuestion();
+				}
 			}
-		} else if (ev.keyCode == 99) { // C
-			// annotate
 		} else if (ev.keyCode == 110) { // N
-			// next
-			// this.setState({readerState: "READING"});
+			this.nextQuestion();
+		}
+	}
+
+	nextQuestion() {
+		let qIndex = this.state.questions.indList.indexOf(this.state.questions.curInd);
+		let newIndList = this.state.questions.indList.slice(0, qIndex)
+			.concat(this.state.questions.indList.slice(qIndex + 1));
+
+		this.setState({
+			questions: {
+				textList: this.state.questions.textList,
+				indList: newIndList,
+				curInd: choose(newIndList)
+			},
+			readerState: "READING"
+		});
+
+	}
+
+	onRSZ() {
+		var isNowMobile = this.state.isMobileReq.matches;
+		if (this.state.isMobile != isNowMobile) {
+			console.log("small", isNowMobile);
+			this.setState({
+				"isMobile": isNowMobile
+			});
 		}
 	}
 
 	componentDidMount() {
 		window.addEventListener('keypress', this.onKeyPress.bind(this));
+		window.addEventListener('resize', this.onRSZ.bind(this));
 	}
 
 	componentWillUnmount() {
-		window.removeEventListener('keypress', this.onKeyPress.bind(this));
+		window.removeEventListener('keypress', this.onResize.bind(this));
+		window.removeEventListener('resize', this.onRSZ.bind(this));
+	}
+
+	getQuestionAnswer() {
+		if (this.state.readerState == "SHOWING") {
+			return this.refs.QCont.state.curQuestionWords.answer;
+		} else {
+			return "";
+		}
 	}
 
   render() {
+		console.log("render", this.state.isMobile, this.state.isMobileReq.matches);
 
     return (
       <div>
 				<div className="appContent">
-	        <QuestionContainer
+	        <QuestionContainer ref="QCont"
 						questionData={this.state.questions}
 						readerState={this.state.readerState}
-						onReadingFinished={ function() {this.setState({readerState: "WAITING"});}.bind(this)}/>
+						onReadingFinished={ function() {this.setState({readerState: "WAITING"});}.bind(this)}
+						setID={this.state.setID}
+						isMobile={this.state.isMobile}/>
 	        <UIContainer buttons={
 	          {
-	            "next": function() {}.bind(this),
+	            "next": this.nextQuestion.bind(this),
 	            "questions": this.openBankModal.bind(this),
 	            "card": function() {}.bind(this),
 	            "download": function() {}.bind(this),
 	            "help": this.openHelpModal.bind(this)
-	          }
-	        }/>
+	          }}
+
+						getAnswer={this.getQuestionAnswer.bind(this)}
+						isMobile={this.state.isMobile}
+
+	        />
 					<div className="pullover">
 						<h1>QuizBug <i className="fa fa-bug fa-lg"></i></h1>
 						<span className="attribution">
@@ -341,7 +429,8 @@ class App extends React.Component {
 
 				<ChangeBankModal
 					isOpen={ this.state.visibleModal == "changeBank" }
-          onFinished={this.onBankChanged.bind(this)} />
+          onFinished={this.onBankChanged.bind(this)}
+					hasError={this.state.bankModalError}/>
         <LoadingModal isOpen={ this.state.visibleModal == "loading" } />
         <HelpModal isOpen={ this.state.visibleModal == "help" }
           onClosing={this.closeModal.bind(this)}/>
@@ -351,8 +440,22 @@ class App extends React.Component {
   }
 }
 
+
+
 addEventListener("load", () => {
-  ReactDOM.render(<App/>, document.getElementById("appContainer"));
+	ReactDOM.render(<App/>, document.getElementById("appContainer"));
+
+	saveData = (function () {
+		var a = document.createElement("a");
+		document.body.appendChild(a);
+		a.style = "display: none";
+		return function (data, fileName) {
+			a.href = "data:text/plain;base64," + btoa(unescape(encodeURIComponent(data)));
+			a.download = fileName;
+			a.click();
+		};
+	}());
+
 });
 
 // $(function() {
