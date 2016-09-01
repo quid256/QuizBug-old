@@ -22,6 +22,7 @@ class QuestionContainer extends React.Component {
 		this.state = {
 			readTimer: -1,
 			wordIndex: 0,
+			readSpeed: 200,
 			curQuestionWords: {
 				question: "",
 				meta: []
@@ -50,23 +51,36 @@ class QuestionContainer extends React.Component {
 			});
 		}
 
-    if (nextProps.readerState != this.props.readerState) {
-      if (nextProps.readerState == "READING") {
-        this.setState({
-					wordIndex: 0,
-					readTimer: setInterval(function() {
-						if (this.state.wordIndex < this.state.curQuestionWords.question.split(" ").length) {
-							this.setState({wordIndex: this.state.wordIndex + 1});
-						} else {
-							clearInterval(this.state.readTimer);
-							this.setState({
-								readTimer: -1
-							});
-							this.props.onReadingFinished();
-						}
-					}.bind(this), 200)
+		if (nextProps.readerState == "READING") {
+
+			if (this.state.readTimer > -1) {
+				clearInterval(this.state.readTimer);
+			}
+
+			this.setState({
+				readTimer: setInterval(function() {
+					if (this.state.wordIndex < this.state.curQuestionWords.question.split(" ").length) {
+						this.setState({wordIndex: this.state.wordIndex + 1});
+					} else {
+						clearInterval(this.state.readTimer);
+						this.setState({
+							readTimer: -1
+						});
+						this.props.onReadingFinished();
+					}
+					this.scrollToBottom();
+				}.bind(this), this.props.readSpeed)
+			});
+
+			if (nextProps.readerState != this.props.readerState) {
+				this.setState({
+					wordIndex: 0
 				});
-      }
+			}
+
+		}
+
+    if (nextProps.readerState != this.props.readerState) {
 
 			if (this.props.readerState == "READING") {
 				clearInterval(this.state.readTimer);
@@ -74,8 +88,13 @@ class QuestionContainer extends React.Component {
 					readTimer: -1
 				});
 			}
+			setTimeout(this.scrollToBottom.bind(this), 300);
     }
   }
+
+	scrollToBottom() {
+		this.refs.qtextcont.scrollTop = this.refs.qtextcont.scrollHeight;
+	}
 
   render() {
 		let qMeta = this.state.curQuestionWords.meta;
@@ -92,12 +111,11 @@ class QuestionContainer extends React.Component {
 			visibleText = beforeWords + " (#)";
 		} else if (this.props.readerState == "SHOWING") {
 			visibleText = beforeWords + " (#) " + afterWords;
-
 		}
 
     return (
       <div className={"questiontext" + (this.props.isMobile ? " full" : "")}>
-  			<div id="qtextcont">
+  			<div id="qtextcont" ref="qtextcont">
 					<p>
 						<b>{ qMeta.length > 0 ? `${qMeta[2]} ${qMeta[1]} | ${qMeta[5]} - ${qMeta[6]}` : "" }</b>
 						<span style={{float: "right"}}>{
@@ -115,13 +133,24 @@ class QuestionContainer extends React.Component {
 						</p>) : null
 					}
 				</div>
-  			<span id="msg"><em>Press [Space] {
-					{
-						"READING": "to buzz",
-						"WAITING": "to see the answer",
-						"SHOWING": "for the next question"
-					}[this.props.readerState]
-				}</em></span>
+				{
+					this.props.isMobile ? (
+						<table className="buttongroup" style={{"width": "100%"}}><tbody><tr>
+							<td style={{width: "25%"}}><button ref="nextBttn" onClick={this.props.onNext}><i className="fa fa-caret-square-o-right fa-lg"></i></button></td>
+							<td style={{width: "50%"}}><button ref="buzzBttn" onClick={this.props.onBuzz}>BUZZ</button></td>
+		  				<td style={{width: "25%"}}><button ref="questionsBttn" onClick={this.props.onQuestions}><i className="fa fa-refresh fa-lg"></i> Q'S</button></td>
+		  			</tr></tbody></table>
+					) : (
+						<span id="msg"><em>Press [Space] {
+							{
+								"READING": "to buzz",
+								"WAITING": "to see the answer",
+								"SHOWING": "for the next question"
+							}[this.props.readerState]
+						}</em></span>
+					)
+				}
+
   		</div>
     );
   }
@@ -178,6 +207,11 @@ class UIContainer extends React.Component {
 		this.props.buttons[name]();
 	}
 
+	slider() {
+		console.log("speed", 50 + (100 - this.refs.speedInput.value) * 3);
+		this.props.slider(50 + (100 - this.refs.speedInput.value) * 3);
+	}
+
   render() {
 		if (this.props.isMobile) {
 			return null;
@@ -197,7 +231,7 @@ class UIContainer extends React.Component {
   			</div>
 
   			<span className="speedlabel">Question Speed: [slow]</span>
-  			<input type="range" defaultValue="50"/>
+  			<input type="range" ref="speedInput" maxdefaultValue="50" onChange={ this.slider.bind(this) }/>
   			<span className="endspeedlabel">[fast]</span>
   		</div>
     );
@@ -219,7 +253,8 @@ class App extends React.Component {
 				indList: [],
 				curInd: -1
 			},
-			setID: 0,
+			"readSpeed": 200,
+			"setID": 0,
 			"cardContent": ""
     };
 		setTimeout(this.onBankChanged.bind(this, [{
@@ -390,8 +425,14 @@ class App extends React.Component {
 		}
 	}
 
+	setQuestionSpeed(spd) {
+		this.setState({
+			readSpeed: spd
+		});
+	}
+
   render() {
-		console.log("render", this.state.isMobile, this.state.isMobileReq.matches);
+		// console.log("render", this.state.isMobile, this.state.isMobileReq.matches);
 
     return (
       <div>
@@ -401,7 +442,11 @@ class App extends React.Component {
 						readerState={this.state.readerState}
 						onReadingFinished={ function() {this.setState({readerState: "WAITING"});}.bind(this)}
 						setID={this.state.setID}
-						isMobile={this.state.isMobile}/>
+						isMobile={this.state.isMobile}
+						onQuestions={this.openBankModal.bind(this)}
+						onBuzz={this.onKeyPress.bind(this, {keyCode: 32})}
+						onNext={this.nextQuestion.bind(this)}
+						readSpeed={this.state.readSpeed}/>
 	        <UIContainer buttons={
 	          {
 	            "next": this.nextQuestion.bind(this),
@@ -411,6 +456,7 @@ class App extends React.Component {
 	            "help": this.openHelpModal.bind(this)
 	          }}
 
+						slider={ this.setQuestionSpeed.bind(this) }
 						getAnswer={this.getQuestionAnswer.bind(this)}
 						isMobile={this.state.isMobile}
 
@@ -458,205 +504,8 @@ addEventListener("load", () => {
 
 });
 
-// $(function() {
-// 	var mobileLayout = false;
-// 	var isMobile = window.matchMedia("only screen and (max-width: 760px)");
-//
-// 	var questionArray = [];
-// 	var currentQuestion;
-// 	var prevSelection = null;
-// 	var readerState = "READING";
-// 	var wordsToBeRead = [];
-// 	var readerInterval = null;
-//
-// 	var wordSpeed = 200;
 //
 //
-// 	// Render a question and start the reader. After complete, call the callback.
-// 	function actuateQuestion() {
-// 		readerState = "READING";
-// 		var $qspan = $("#questiontext div#qtextcont").html(currentQuestion);
-// 		var descrBar = $qspan.find("p:first-child").html();
-// 		var barArray = descrBar.replace(/<span.+?>.*?<\/span>/g, "")
-// 			.replace(/<.?b>/g, "").split(" | ");
-// 		$qspan.find("p:first-child").html("<b>" + barArray[2] + " " + barArray[1] + " | " + barArray[5] + " - " + (barArray[6] ? barArray[6] : "None") + "</b><span class='floatright'>(" + questionArray.length + " questions total)</span>");
-// 		$qspan.find("p:last-child").hide();
-// 		$qspan.find("p:nth-child(2)").html(
-// 			$qspan.find("p:nth-child(2)").html().replace(/<em>.+?<\/em>/g, "")
-// 		);
-// 		wordsToBeRead = $("p:nth-child(2)").text().split(" ").slice(1);
-// 		$("p:nth-child(2)").html("");
-//
-// 		clearInterval(readerInterval);
-//
-// 		readerInterval = setInterval(function() {
-// 			var nextWord = wordsToBeRead.shift();
-// 			if (nextWord) {
-// 				$("p:nth-child(2)").get(0).innerHTML += nextWord + " ";
-// 			}
-// 			else {
-// 				$.event.trigger({type: "keypress", which: 32});
-// 			}
-// 		}, wordSpeed);
-//
-// 		readerState = "READING";
-// 	}
-//
-//
-//
-// 	$("#newquestion").click(function() {
-// 		updateQuestion();
-// 		readerState = "READING";
-// 	});
-//
-// 	$("#annotate").click(function() {
-// 		var selectedTextObj = window.getSelection().getRangeAt(0);
-// 		var selectedText = selectedTextObj.startContainer.data;
-// 		var startWordSel = selectedTextObj.startOffset;
-// 		while (selectedText.slice(startWordSel, startWordSel + 1) != " " && startWordSel > -1) {
-// 			startWordSel--;
-// 		}
-// 		startWordSel++;
-// 		var endWordSel = selectedTextObj.endOffset;
-// 		while (" ,.!?".indexOf(selectedText.slice(endWordSel, endWordSel + 1)) == -1 && endWordSel < selectedText.length) {
-// 			endWordSel++;
-// 		}
-//
-// 		var modSelectedText = selectedText.slice(startWordSel, endWordSel);
-// 		if (window.getSelection().toString().length > 0) {
-// 			var answerLine = $("#questiontext div#qtextcont div div p:last").html().slice("<em><strong>ANSWER:</strong></em> ".length);
-// 			$("textarea").get(0).value += modSelectedText + "\t" + answerLine + "\n";
-// 		}
-// 	});
-//
-// 	$("#select").click(function() {
-// 		$("#changebankform").show();
-// 		$("#overlay").fadeIn();
-// 		prevSelection = $(".filterarea").html();
-// 	});
-//
-// 	function attachFilterListeners(cba) {
-//
-// 		cba = cba || function() {};
-//
-// 		var changeOptionCategory = function(cb, e) {
-// 			$.get("/php/loadSubcategories.php", {
-// 				category: $(e.target).val()
-// 			}, function(data) {
-// 				$(e.target).parents(".filter").find(".optionSubcategory").html(data.replace(/<.?select.+?>/g, ""));
-// 				cb();
-// 			});
-// 		};
-//
-// 		$(".filterarea .filter:last .optionCategory").change(changeOptionCategory.bind(null, function(){}));
-//
-// 		var changeOptionDifficulty = function(cb, e) {
-// 			$.get("/php/loadTournaments.php", {
-// 				qtype: "Tossups",
-// 				difficulty: $(e.target).val()
-// 			}, function(data) {
-// 				console.log("Difficulty Change");
-// 				console.log($(e.target));
-// 				$(e.target).parents(".filter").find(".optionTournament").html(data.replace(/<.?select.+?>/g, ""));
-// 				cb();
-// 			});
-// 		};
-//
-// 		$(".filterarea .filter:last-child .optionDifficulty").change(changeOptionDifficulty.bind(null, function(){}));
-//
-// 		async.parallel([
-// 			function(cb) {
-// 				changeOptionDifficulty(cb, { target: $(".filterarea .filter:last .optionDifficulty")[0] });
-// 			}, function(cb) {
-// 				changeOptionCategory(cb, { target: $(".filterarea .filter:last .optionCategory")[0] });
-// 			}
-// 		], cba);
-//
-//
-//
-// 		$(".filterarea .filter:last .delete").click(function(e) {
-// 			var $sender = $(e.target);
-//
-// 			$sender.parents(".filter").fadeOut("fast", function() {
-// 				$sender.parents(".filter").parent().remove();
-// 				if ($("table.filterarea > tbody > tr > td").length == 1) {
-// 					$(".filterarea > tbody > tr > td button.delete").prop("disabled", true);
-// 				}
-// 			});
-//
-// 			this.blur();
-//
-// 		});
-//
-// 	}
-//
-// 	$("#dialog_changebank").click(function() {
-// 		if ($("table.filterarea > tbody > tr > td").length > 0) {
-// 			$("#changebankform").hide();
-// 			$("#loadingform").show();
-//
-// 			questionArray = [];
-// 			getDatabases(0, function(arrSize) {
-// 				if (arrSize === 0) {
-// 					$("#emptyMsg").show().delay(2 * 1000).fadeOut("slow");
-//
-// 					$("#loadingform").hide();
-// 					$("#changebankform").show();
-// 				} else {
-// 					$("#overlay").fadeOut(function() {
-// 						$("#loadingform").hide();
-// 					});
-// 				}
-// 			});
-//
-// 			prevSelection = null;
-// 		}
-// 	});
-// 	$("#dialog_cancel").click(function() {
-// 		$("#overlay").fadeOut(function() {
-// 			$("#changebankform").hide();
-// 			$(".filterarea").html(prevSelection);
-// 			prevSelection = null;
-// 		});
-//
-// 	});
-// 	$("#dialog_addsearch").click(function() {
-//
-// 		if ($("table.filterarea > tbody > tr > td").length < 5) {
-// 			if ($("table.filterarea > tbody > tr > td").length == 1) {
-// 				$("table.filterarea > tbody > tr > td button.delete").prop("disabled", false);
-// 			}
-// 			$("<td>").appendTo("table.filterarea > tbody > tr");
-// 			$("#changebankform > table.filter").clone().appendTo("table.filterarea > tbody > tr > td:last-child").fadeIn();
-//
-// 			attachFilterListeners();
-// 		}
-// 	});
-//
-// 	$(window).keypress(function(ev) {
-// 		if (ev.which == 32) { // Space
-// 			if (readerState == "READING") {
-// 				clearInterval(readerInterval);
-// 				$("#questiontext #qtextcont p:nth-child(2)").get(0).innerHTML += "(#) ";
-// 				$("span#msg").html("<em>Press [Space] to see the answer</em>");
-// 				readerState = "WAITING";
-// 			} else if (readerState == "WAITING") {
-// 				$("#questiontext #qtextcont p:nth-child(2)").get(0).innerHTML += wordsToBeRead.join(" ");
-// 				$("#questiontext #qtextcont p:last-child").show();
-// 				$("span#msg").html("<em>Press [Space] for the next question</em>");
-// 				readerState = "SHOWING";
-// 			} else if (readerState == "SHOWING") {
-// 				$("#newquestion").click();
-// 				$("span#msg").html("<em>Press [Space] to buzz</em>");
-// 				readerState = "READING";
-// 			}
-// 		} else if (ev.which == 99) { // C
-// 			$("#annotate").click();
-// 		} else if (ev.which == 110) { // N
-// 			$("#newquestion").click();
-// 			readerState = "READING";
-// 		}
-// 	});
 //
 // 	$("textarea").keypress(function(e) {
 // 	  var $this, end, start;
@@ -721,25 +570,6 @@ addEventListener("load", () => {
 // 		});
 // 	});
 //
-// 	$("input[type=range]").val("50");
-//
-// 	$("button").click(function() {
-// 		this.blur();
-// 	});
-//
-// 	function handleLayoutChange() {
-// 		if (isMobile.matches) {
-// 			if (!mobileLayout) {
-// 				mobileLayout = true;
-//
-// 			}
-// 		} else {
-// 			if (mobileLayout) {
-// 				mobileLayout = false;
-//
-// 			}
-// 		}
-// 	}
 //
 // 	$(window).resize(handleLayoutChange);
 // 	handleLayoutChange();

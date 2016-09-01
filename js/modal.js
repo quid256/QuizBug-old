@@ -278,26 +278,28 @@ class ChangeBankModal extends React.Component {
             ) : null
           }
         </ReactCSSTransitionGroup>
-        <table className="filterarea">
-          <tbody>
-            <ReactCSSTransitionGroup
-              transitionName="filter-anim"
-              transitionEnterTimeout={500}
-              transitionLeaveTimeout={500}
-              component="tr">
-              { this.state.questionFilters.map((n, i) => (
-                <td key={ n.key } className="question-filter-cell">
-                  <QuestionFilter
-                    values={ n }
-                    hasDelete={ this.state.questionFilters.length > 1 }
-                    onDelete={ this.removeQuestionFilter.bind(this, i) }
-                    onUpdated={ this.updateQuestionFilter.bind(this, i) } />
-                </td>
-              )) }
-            </ReactCSSTransitionGroup>
-          </tbody>
-        </table>
-        <table className="buttongroup"><tbody><tr>
+        <div className="filterareaContainer">
+          <table className="filterarea">
+            <tbody>
+              <ReactCSSTransitionGroup
+                transitionName="filter-anim"
+                transitionEnterTimeout={500}
+                transitionLeaveTimeout={500}
+                component="tr">
+                { this.state.questionFilters.map((n, i) => (
+                  <td key={ n.key } className="question-filter-cell">
+                    <QuestionFilter
+                      values={ n }
+                      hasDelete={ this.state.questionFilters.length > 1 }
+                      onDelete={ this.removeQuestionFilter.bind(this, i) }
+                      onUpdated={ this.updateQuestionFilter.bind(this, i) } />
+                  </td>
+                )) }
+              </ReactCSSTransitionGroup>
+            </tbody>
+          </table>
+        </div>
+        <table className="buttongroup bank-buttongroup"><tbody><tr>
           <td><button id="dialog_cancel" onClick={ this.closeModal.bind(this) }><i className="fa fa-ban fa-lg"></i> CANCEL</button></td>
           <td><button id="dialog_addsearch" onClick={ this.addQuestionFilter.bind(this) }><i className="fa fa-plus fa-lg"></i> ADD CATEGORY</button></td>
           <td><button id="dialog_changebank" onClick={ this.updateFilters.bind(this) }>UPDATE</button></td>
